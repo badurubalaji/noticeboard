@@ -1,0 +1,135 @@
+<div class="page-content animate-fade-in">
+  <div class="page-header">
+    <div>
+      <h1>Dashboard</h1>
+      <p class="subtitle">Welcome back, {{ auth.user()?.name }} 👋</p>
+    </div>
+    <a routerLink="/notices/new" class="btn btn-primary">
+      <span>+</span> New Notice
+    </a>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid-4 stats-row">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: rgba(59, 130, 246, 0.15);">📝</div>
+      <div class="stat-value">{{ stats().totalNotices }}</div>
+      <div class="stat-label">Total Notices</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15);">✅</div>
+      <div class="stat-value">{{ stats().activeNotices }}</div>
+      <div class="stat-label">Active</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background: rgba(139, 92, 246, 0.15);">⏰</div>
+      <div class="stat-value">{{ stats().scheduledNotices }}</div>
+      <div class="stat-label">Scheduled</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15);">📺</div>
+      <div class="stat-value">{{ stats().totalBoards }}</div>
+      <div class="stat-label">Display Boards</div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <!-- Recent Notices -->
+    <div class="card recent-notices">
+      <div class="card-header">
+        <h3>Recent Notices</h3>
+        <a routerLink="/notices" class="btn btn-ghost btn-sm">View All →</a>
+      </div>
+
+      @if (recentNotices().length === 0 && !loading()) {
+        <div class="empty-state">
+          <div class="icon">📋</div>
+          <h3>No notices yet</h3>
+          <p>Create your first notice to get started</p>
+          <a routerLink="/notices/new" class="btn btn-primary btn-sm">Create Notice</a>
+        </div>
+      }
+
+      @for (notice of recentNotices(); track notice._id) {
+        <div class="notice-row">
+          <div class="notice-info">
+            <span class="badge badge-{{ notice.status }}">{{ notice.status }}</span>
+            <h4>{{ notice.title }}</h4>
+            <span class="notice-meta">
+              {{ notice.createdBy?.name || 'Unknown' }} · {{ getTimeAgo(notice.createdAt) }}
+            </span>
+          </div>
+          <div class="notice-priority">
+            <span class="badge badge-priority-{{ notice.priority }}">
+              {{ getPriorityLabel(notice.priority) }}
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Active Boards -->
+    <div class="card active-boards">
+      <div class="card-header">
+        <h3>Display Boards</h3>
+        <a routerLink="/boards" class="btn btn-ghost btn-sm">Manage →</a>
+      </div>
+
+      @if (boards().length === 0 && !loading()) {
+        <div class="empty-state">
+          <div class="icon">📺</div>
+          <h3>No boards configured</h3>
+          <p>Set up a display board for your TVs and tablets</p>
+          <a routerLink="/boards/new" class="btn btn-primary btn-sm">Create Board</a>
+        </div>
+      }
+
+      @for (board of boards(); track board._id) {
+        <div class="board-row">
+          <div class="board-info">
+            <h4>{{ board.name }}</h4>
+            <span class="board-meta">
+              {{ board.displayMode | titlecase }} · {{ board.layout.columns }}×{{ board.layout.rows }}
+            </span>
+          </div>
+          <a
+            [href]="'/display/' + board._id"
+            target="_blank"
+            class="btn btn-secondary btn-sm"
+          >
+            Open ↗
+          </a>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="card quick-actions">
+    <div class="card-header">
+      <h3>Quick Actions</h3>
+    </div>
+    <div class="actions-grid">
+      <a routerLink="/notices/new" class="action-card">
+        <span class="action-icon">📝</span>
+        <span class="action-label">New Notice</span>
+      </a>
+      <a routerLink="/templates" class="action-card">
+        <span class="action-icon">📄</span>
+        <span class="action-label">From Template</span>
+      </a>
+      <a routerLink="/boards/new" class="action-card">
+        <span class="action-icon">📺</span>
+        <span class="action-label">New Board</span>
+      </a>
+      <a routerLink="/media" class="action-card">
+        <span class="action-icon">🖼️</span>
+        <span class="action-label">Upload Media</span>
+      </a>
+      <a routerLink="/settings" class="action-card">
+        <span class="action-icon">🎨</span>
+        <span class="action-label">Customize</span>
+      </a>
+    </div>
+  </div>
+</div>

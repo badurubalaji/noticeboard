@@ -1,0 +1,101 @@
+<div class="help-page animate-fade-in">
+  @if (!activeSlug()) {
+    <div class="help-index">
+      <div class="help-hero">
+        <h1>Need help? 👋</h1>
+        <p>Pick a topic below. Each guide takes 1–3 minutes and walks you through everything step by step.</p>
+        <input
+          type="search"
+          class="help-search form-input"
+          placeholder="Search help topics…"
+          [value]="search()"
+          (input)="onSearch($any($event.target).value)"
+        />
+      </div>
+
+      @if (filtered().length === 0) {
+        <div class="help-empty">
+          <p>No topics match "<strong>{{ search() }}</strong>".</p>
+          <button class="btn btn-ghost" (click)="onSearch('')">Clear search</button>
+        </div>
+      }
+
+      @if (byCategory()['start'].length > 0) {
+        <section>
+          <h3 class="help-section-title">Start here</h3>
+          <div class="help-cards">
+            @for (t of byCategory()['start']; track t.slug) {
+              <button class="help-card" (click)="openTopic(t.slug)">
+                <span class="help-card-icon">{{ t.icon }}</span>
+                <div>
+                  <strong>{{ t.title }}</strong>
+                  <span>{{ t.blurb }}</span>
+                </div>
+              </button>
+            }
+          </div>
+        </section>
+      }
+
+      @if (byCategory()['daily'].length > 0) {
+        <section>
+          <h3 class="help-section-title">Everyday tasks</h3>
+          <div class="help-cards">
+            @for (t of byCategory()['daily']; track t.slug) {
+              <button class="help-card" (click)="openTopic(t.slug)">
+                <span class="help-card-icon">{{ t.icon }}</span>
+                <div>
+                  <strong>{{ t.title }}</strong>
+                  <span>{{ t.blurb }}</span>
+                </div>
+              </button>
+            }
+          </div>
+        </section>
+      }
+
+      @if (byCategory()['setup'].length > 0) {
+        <section>
+          <h3 class="help-section-title">Setup (one-time things)</h3>
+          <div class="help-cards">
+            @for (t of byCategory()['setup']; track t.slug) {
+              <button class="help-card" (click)="openTopic(t.slug)">
+                <span class="help-card-icon">{{ t.icon }}</span>
+                <div>
+                  <strong>{{ t.title }}</strong>
+                  <span>{{ t.blurb }}</span>
+                </div>
+              </button>
+            }
+          </div>
+        </section>
+      }
+
+      @if (byCategory()['fix'].length > 0) {
+        <section>
+          <h3 class="help-section-title">Something's wrong</h3>
+          <div class="help-cards">
+            @for (t of byCategory()['fix']; track t.slug) {
+              <button class="help-card" (click)="openTopic(t.slug)">
+                <span class="help-card-icon">{{ t.icon }}</span>
+                <div>
+                  <strong>{{ t.title }}</strong>
+                  <span>{{ t.blurb }}</span>
+                </div>
+              </button>
+            }
+          </div>
+        </section>
+      }
+    </div>
+  } @else {
+    <div class="help-article">
+      <button class="btn btn-ghost help-back" (click)="closeTopic()">← All help topics</button>
+      @if (loading()) {
+        <div class="help-loading"><span class="spinner"></span> Loading…</div>
+      } @else if (contentHtml()) {
+        <article class="help-content" [innerHTML]="contentHtml()" (click)="$any($event.target).dataset?.helpTopic && openTopic($any($event.target).dataset.helpTopic)"></article>
+      }
+    </div>
+  }
+</div>

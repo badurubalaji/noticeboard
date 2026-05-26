@@ -1,0 +1,117 @@
+<div class="page-content animate-fade-in">
+  <div class="page-header">
+    <div>
+      <h1>Templates</h1>
+      <p class="subtitle">Create notices from pre-built templates</p>
+    </div>
+    <button class="btn btn-primary" (click)="showCreateModal = true">
+      <span>+</span> Create Template
+    </button>
+  </div>
+
+  <!-- Filter -->
+  <div class="filters-bar">
+    <select class="form-select filter-select" [(ngModel)]="filterCategory" (change)="loadTemplates()">
+      <option value="">All Categories</option>
+      <option value="announcement">Announcement</option>
+      <option value="alert">Alert</option>
+      <option value="event">Event</option>
+      <option value="kpi">KPI Dashboard</option>
+      <option value="schedule">Schedule</option>
+      <option value="safety">Safety</option>
+      <option value="custom">Custom</option>
+    </select>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center"><div class="spinner spinner-lg"></div></div>
+  } @else if (templates().length === 0) {
+    <div class="empty-state">
+      <div class="icon">📄</div>
+      <h3>No templates found</h3>
+      <p>Create your first template or change filters</p>
+    </div>
+  } @else {
+    <div class="templates-grid">
+      @for (template of templates(); track template._id) {
+        <div class="template-card">
+          <div class="template-preview">
+            <div class="preview-content" [innerHTML]="'<style>' + template.css + '</style>' + template.html"></div>
+          </div>
+          <div class="template-info">
+            <div class="template-header">
+              <h3>{{ template.name }}</h3>
+              @if (template.isSystem) {
+                <span class="badge badge-scheduled">System</span>
+              }
+            </div>
+            <p class="template-desc">{{ template.description }}</p>
+            <div class="template-meta">
+              <span class="cat-badge">{{ template.category }}</span>
+              @for (ind of template.industry; track ind) {
+                <span class="industry-badge">{{ ind }}</span>
+              }
+            </div>
+            <div class="template-actions">
+              <button class="btn btn-primary btn-sm" (click)="useTemplate(template)">
+                Use Template
+              </button>
+              @if (!template.isSystem) {
+                <button class="btn btn-ghost btn-sm" (click)="deleteTemplate(template._id)">
+                  🗑️
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Create Modal -->
+  @if (showCreateModal) {
+    <div class="modal-overlay" (click)="showCreateModal = false">
+      <div class="modal" (click)="$event.stopPropagation()" style="min-width: 600px;">
+        <div class="modal-header">
+          <h2>Create Custom Template</h2>
+          <button class="btn btn-ghost btn-icon" (click)="showCreateModal = false">✕</button>
+        </div>
+
+        <div class="form-group">
+          <label>Template Name</label>
+          <input type="text" class="form-input" [(ngModel)]="newTemplate.name" placeholder="My Template" />
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" class="form-input" [(ngModel)]="newTemplate.description" placeholder="What this template is for" />
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select class="form-select" [(ngModel)]="newTemplate.category">
+            <option value="announcement">Announcement</option>
+            <option value="alert">Alert</option>
+            <option value="event">Event</option>
+            <option value="kpi">KPI</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>HTML Template</label>
+          <textarea class="form-textarea" [(ngModel)]="newTemplate.html" rows="8"
+            placeholder="Use curly-brace placeholders for dynamic fields"></textarea>
+        </div>
+        <div class="form-group">
+          <label>CSS Styles</label>
+          <textarea class="form-textarea" [(ngModel)]="newTemplate.css" rows="5"></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="showCreateModal = false">Cancel</button>
+          <button class="btn btn-primary" (click)="createTemplate()" [disabled]="!newTemplate.name">
+            Create Template
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

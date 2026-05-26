@@ -1,0 +1,600 @@
+<div class="page-content animate-fade-in">
+  <div class="page-header">
+    <div>
+      <h1>Settings</h1>
+      <p class="subtitle">Customize your workspace</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab" [class.active]="activeTab === 'branding'" (click)="activeTab = 'branding'">🎨 Brand</button>
+    <button class="tab" [class.active]="activeTab === 'display'" (click)="activeTab = 'display'">📺 Display Screens</button>
+    <button class="tab" [class.active]="activeTab === 'fonts'" (click)="activeTab = 'fonts'">🔤 Fonts</button>
+    <button class="tab" [class.active]="activeTab === 'datasources'" (click)="activeTab = 'datasources'">🔗 Data Sources</button>
+    <button class="tab" [class.active]="activeTab === 'users'" (click)="activeTab = 'users'">👥 Users</button>
+  </div>
+
+  <!-- ===== Branding Tab ===== -->
+  @if (activeTab === 'branding') {
+    <div class="card settings-card">
+      <h3 class="section-title">Logo</h3>
+      <p class="hint">Upload your company logo (PNG or SVG works best). Shown on the kiosk screens.</p>
+      <div class="logo-row">
+        <div class="logo-preview" [style.background]="branding.primaryColor + '22'">
+          @if (branding.logo) {
+            <img [src]="branding.logo" alt="logo" />
+          } @else {
+            <span class="logo-letter" [style.color]="branding.primaryColor">{{ previewLogoLetter() }}</span>
+          }
+        </div>
+        <div class="logo-actions">
+          <label class="btn btn-primary">
+            @if (uploadingLogo()) { <span class="spinner"></span> Uploading… }
+            @else { 📤 Upload logo }
+            <input type="file" accept="image/*" hidden (change)="onLogoSelected($event)" />
+          </label>
+          @if (branding.logo) {
+            <button class="btn btn-secondary" (click)="clearLogo()">Remove</button>
+          }
+        </div>
+      </div>
+
+      <h3 class="section-title" style="margin-top:24px;">Brand Colors</h3>
+      <p class="hint">Click the colored square to pick a color, or paste a hex code.</p>
+      <div class="grid-3">
+        <div class="form-group">
+          <label>Primary</label>
+          <div class="color-picker">
+            <input type="color" [(ngModel)]="branding.primaryColor" />
+            <input type="text" class="form-input" [(ngModel)]="branding.primaryColor" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Secondary</label>
+          <div class="color-picker">
+            <input type="color" [(ngModel)]="branding.secondaryColor" />
+            <input type="text" class="form-input" [(ngModel)]="branding.secondaryColor" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Accent</label>
+          <div class="color-picker">
+            <input type="color" [(ngModel)]="branding.accentColor" />
+            <input type="text" class="form-input" [(ngModel)]="branding.accentColor" />
+          </div>
+        </div>
+      </div>
+
+      <h3 class="section-title" style="margin-top:24px;">Typography</h3>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Font Family</label>
+          <select class="form-select" [(ngModel)]="branding.fontFamily">
+            @for (f of fontOptions(); track f.family) {
+              <option [value]="f.family" [style.font-family]="f.family">{{ f.family }}</option>
+            }
+          </select>
+          <p class="hint">Add custom fonts in the “Fonts” tab.</p>
+        </div>
+        <div class="form-group">
+          <label>Theme</label>
+          <select class="form-select" [(ngModel)]="branding.darkMode">
+            <option [ngValue]="true">🌙 Dark</option>
+            <option [ngValue]="false">☀️ Light</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" (click)="saveBranding()" [disabled]="saving()" style="margin-top:16px;">
+        @if (saving()) { <span class="spinner"></span> }
+        Save Changes
+      </button>
+    </div>
+  }
+
+  <!-- ===== Display Screens Tab ===== -->
+  @if (activeTab === 'display') {
+    <div class="display-settings-grid">
+      <!-- Editor -->
+      <div class="card settings-card">
+        <h3 class="section-title">Loading screen</h3>
+        <p class="hint">Shown while a board is loading on a TV or tablet.</p>
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" class="form-input" [(ngModel)]="branding.displayScreens!.loadingTitle" maxlength="60" />
+        </div>
+        <div class="form-group">
+          <label>Subtitle</label>
+          <input type="text" class="form-input" [(ngModel)]="branding.displayScreens!.loadingSubtitle" maxlength="120" />
+        </div>
+
+        <h3 class="section-title" style="margin-top:24px;">Board not available</h3>
+        <p class="hint">Shown when a board is offline, deleted, or the URL is wrong.</p>
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" class="form-input" [(ngModel)]="branding.displayScreens!.unavailableTitle" maxlength="60" />
+        </div>
+        <div class="form-group">
+          <label>Subtitle</label>
+          <input type="text" class="form-input" [(ngModel)]="branding.displayScreens!.unavailableSubtitle" maxlength="160" />
+        </div>
+
+        <h3 class="section-title" style="margin-top:24px;">No notices yet</h3>
+        <p class="hint">Shown when a board has no active notices.</p>
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" class="form-input" [(ngModel)]="branding.displayScreens!.emptyTitle" maxlength="60" />
+        </div>
+        <div class="form-group">
+          <label>Subtitle</label>
+          <input type="text" class="form-input" [(ngModel)]="branding.displayScreens!.emptySubtitle" maxlength="160" />
+        </div>
+
+        <h3 class="section-title" style="margin-top:24px;">Options</h3>
+        <label class="checkbox-row">
+          <input type="checkbox" [(ngModel)]="branding.displayScreens!.showLogo" />
+          <span>Show our logo on these screens</span>
+        </label>
+
+        <div style="display:flex;gap:8px;margin-top:24px;">
+          <button class="btn btn-primary" (click)="saveBranding()" [disabled]="saving()">
+            @if (saving()) { <span class="spinner"></span> }
+            Save Display Screens
+          </button>
+          <button class="btn btn-ghost" (click)="resetDisplayMessages()" type="button">Reset to default text</button>
+        </div>
+      </div>
+
+      <!-- Live preview -->
+      <div class="preview-pane">
+        <div class="preview-toolbar">
+          <span class="preview-label">Live preview</span>
+          <div class="preview-switch">
+            <button [class.active]="previewMode === 'loading'" (click)="previewMode = 'loading'">Loading</button>
+            <button [class.active]="previewMode === 'unavailable'" (click)="previewMode = 'unavailable'">Unavailable</button>
+            <button [class.active]="previewMode === 'empty'" (click)="previewMode = 'empty'">No notices</button>
+          </div>
+        </div>
+        <div class="preview-frame">
+          <div class="preview-screen" [ngStyle]="previewStyles()">
+            <div class="preview-card">
+              @if (branding.displayScreens!.showLogo) {
+                @if (branding.logo) {
+                  <img class="preview-logo" [src]="branding.logo" alt="logo" />
+                } @else {
+                  <div class="preview-logo-letter" [style.background]="branding.primaryColor">{{ previewLogoLetter() }}</div>
+                }
+              }
+              @if (previewMode === 'loading') {
+                <div class="preview-spinner" [style.border-top-color]="branding.primaryColor"></div>
+                <h2>{{ branding.displayScreens!.loadingTitle }}</h2>
+                <p>{{ branding.displayScreens!.loadingSubtitle }}</p>
+              } @else if (previewMode === 'unavailable') {
+                <span class="preview-badge"
+                      [style.background]="branding.accentColor + '22'"
+                      [style.color]="branding.accentColor">Unavailable</span>
+                <h2>{{ branding.displayScreens!.unavailableTitle }}</h2>
+                <p>{{ branding.displayScreens!.unavailableSubtitle }}</p>
+              } @else {
+                <span class="preview-icon">📋</span>
+                <h2>{{ branding.displayScreens!.emptyTitle }}</h2>
+                <p>{{ branding.displayScreens!.emptySubtitle }}</p>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ===== Fonts Tab ===== -->
+  @if (activeTab === 'fonts') {
+    <div class="card settings-card">
+      <h3 class="section-title">Built-in fonts</h3>
+      <p class="hint">Always available — no setup needed.</p>
+      <div class="font-grid">
+        @for (f of builtinFonts; track f) {
+          <div class="font-chip" [style.font-family]="f">{{ f }}</div>
+        }
+      </div>
+
+      <h3 class="section-title" style="margin-top:24px;">Add a custom font</h3>
+      <p class="hint">
+        Paste a Google Fonts URL (from <em>fonts.google.com → Get embed code → @&#64;import / link</em>),
+        or a direct URL to a <code>.woff2</code>/<code>.ttf</code> file.
+      </p>
+      <div class="font-add">
+        <input type="text" class="form-input" [(ngModel)]="newFont.family" placeholder="Font name (e.g. Manrope)" />
+        <input type="text" class="form-input" [(ngModel)]="newFont.url"
+               placeholder="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&display=swap" />
+        <button class="btn btn-primary" (click)="addCustomFont()" [disabled]="!newFont.family || !newFont.url">
+          + Add font
+        </button>
+      </div>
+
+      @if ((branding.customFonts || []).length > 0) {
+        <h3 class="section-title" style="margin-top:24px;">Your custom fonts</h3>
+        <div class="font-list">
+          @for (f of branding.customFonts || []; track f.family) {
+            <div class="font-card">
+              <div class="font-card-sample" [style.font-family]="f.family">
+                <div class="big">{{ f.family }}</div>
+                <div class="small">The quick brown fox jumps over the lazy dog</div>
+              </div>
+              <button class="btn btn-ghost btn-sm" (click)="removeCustomFont(f.family)">Remove</button>
+            </div>
+          }
+        </div>
+      }
+
+      <button class="btn btn-primary" (click)="saveBranding()" [disabled]="saving()" style="margin-top:24px;">
+        @if (saving()) { <span class="spinner"></span> }
+        Save Fonts
+      </button>
+    </div>
+  }
+
+  <!-- ===== Data Sources Tab ===== -->
+  @if (activeTab === 'datasources') {
+    <div class="card settings-card">
+      <div class="card-header">
+        <div>
+          <h3>External data sources</h3>
+          <p class="hint">
+            Connect to any API that returns JSON. Once a source is set up, you can drop it into any chart,
+            table, or text widget and it’ll refresh automatically.
+          </p>
+        </div>
+        <button class="btn btn-primary btn-sm" (click)="openNewDs()">+ Add data source</button>
+      </div>
+
+      @if (dataSources().length === 0) {
+        <div class="ds-empty">
+          <span class="ds-empty-icon">🔗</span>
+          <strong>No data sources yet</strong>
+          <p>Add your first API connection — for example, your factory dashboard, weather, or stock feed.</p>
+          <button class="btn btn-primary" (click)="openNewDs()">+ Add your first source</button>
+        </div>
+      } @else {
+        <div class="ds-list">
+          @for (ds of dataSources(); track ds._id) {
+            <div class="ds-card" [class.ds-inactive]="!ds.isActive">
+              <div class="ds-card-head">
+                <div class="ds-card-title">
+                  <strong>{{ ds.name }}</strong>
+                  @if (ds.sourceType === 'json') {
+                    <span class="ds-method ds-method-json">JSON</span>
+                  } @else {
+                    <span class="ds-method ds-method-{{ ds.method.toLowerCase() }}">{{ ds.method }}</span>
+                  }
+                  @if (!ds.isActive && ds.sourceType !== 'json') { <span class="ds-paused">paused</span> }
+                </div>
+                <div class="ds-card-actions">
+                  @if (ds.sourceType !== 'json') {
+                    <button class="btn btn-ghost btn-sm" (click)="refreshDs(ds)" title="Fetch now">↻ Refresh</button>
+                  }
+                  <button class="btn btn-ghost btn-sm" (click)="openEditDs(ds)">Edit</button>
+                  <button class="btn btn-ghost btn-sm" (click)="deleteDs(ds)" style="color:#f87171;">Delete</button>
+                </div>
+              </div>
+              @if (ds.description) {
+                <div class="ds-card-desc">{{ ds.description }}</div>
+              }
+              @if (ds.sourceType === 'json') {
+                <div class="ds-card-url">📄 Static JSON payload</div>
+              } @else {
+                <div class="ds-card-url">{{ ds.url }}</div>
+              }
+              <div class="ds-card-meta">
+                @if (ds.sourceType === 'json') {
+                  <span>Loaded {{ formatRelativeTime(ds.lastFetchedAt) }}</span>
+                } @else {
+                  <span>Refresh every {{ ds.refreshInterval }}s</span>
+                  <span class="ds-sep">•</span>
+                  <span [class.ds-status-success]="ds.lastFetchStatus === 'success'"
+                        [class.ds-status-error]="ds.lastFetchStatus === 'error'"
+                        [class.ds-status-never]="ds.lastFetchStatus === 'never'">
+                    @if (ds.lastFetchStatus === 'success') { ✓ Last fetch: {{ formatRelativeTime(ds.lastFetchedAt) }} }
+                    @else if (ds.lastFetchStatus === 'error') { ✕ Last fetch failed — {{ ds.lastError }} }
+                    @else { Never fetched yet }
+                  </span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ===== Users Tab ===== -->
+  @if (activeTab === 'users') {
+    <div class="card settings-card">
+      <div class="card-header">
+        <h3>Team Members</h3>
+        <button class="btn btn-primary btn-sm" (click)="showInviteModal = true">+ Invite User</button>
+      </div>
+
+      <div class="table-container" style="margin-top:16px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of users(); track user._id) {
+              <tr>
+                <td><strong>{{ user.name }}</strong></td>
+                <td class="text-muted">{{ user.email }}</td>
+                <td>
+                  <select class="form-select role-select" [ngModel]="user.role"
+                    (ngModelChange)="updateUserRole(user._id, $event)">
+                    <option value="owner">Owner</option>
+                    <option value="admin">Admin</option>
+                    <option value="editor">Editor</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+                </td>
+                <td>
+                  <span class="badge" [class.badge-active]="user.isActive" [class.badge-expired]="!user.isActive">
+                    {{ user.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Invite Modal -->
+  @if (showInviteModal) {
+    <div class="modal-overlay" (click)="showInviteModal = false">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Invite User</h2>
+          <button class="btn btn-ghost btn-icon" (click)="showInviteModal = false">✕</button>
+        </div>
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" class="form-input" [(ngModel)]="invite.name" placeholder="Full name" />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" class="form-input" [(ngModel)]="invite.email" placeholder="user@company.com" />
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select class="form-select" [(ngModel)]="invite.role">
+            <option value="admin">Admin</option>
+            <option value="editor">Editor</option>
+            <option value="viewer">Viewer</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Temporary Password</label>
+          <input type="password" class="form-input" [(ngModel)]="invite.password" placeholder="Min 6 characters" />
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="showInviteModal = false">Cancel</button>
+          <button class="btn btn-primary" (click)="inviteUser()" [disabled]="!invite.name || !invite.email || !invite.password">
+            Send Invite
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ===== Data Source Modal ===== -->
+  @if (showDsModal) {
+    <div class="modal-overlay" (click)="closeDsModal()">
+      <div class="modal modal-lg" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ editingDs._id ? 'Edit data source' : 'New data source' }}</h2>
+          <button class="btn btn-ghost btn-icon" (click)="closeDsModal()">✕</button>
+        </div>
+
+        <div class="ds-form-grid">
+          <div class="ds-form-col">
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" class="form-input" [(ngModel)]="editingDs.name" placeholder="e.g. Production KPIs" />
+            </div>
+            <div class="form-group">
+              <label>Description (optional)</label>
+              <input type="text" class="form-input" [(ngModel)]="editingDs.description" placeholder="What does this source return?" />
+            </div>
+
+            <div class="form-group">
+              <label>Where does the data come from?</label>
+              <div class="ds-type-switch">
+                <button type="button"
+                        class="ds-type-btn"
+                        [class.active]="(editingDs.sourceType || 'url') === 'url'"
+                        (click)="setSourceType('url')">
+                  🌐 URL endpoint
+                  <span>Live API that returns JSON</span>
+                </button>
+                <button type="button"
+                        class="ds-type-btn"
+                        [class.active]="editingDs.sourceType === 'json'"
+                        (click)="setSourceType('json')">
+                  📄 JSON file / paste
+                  <span>Static JSON you upload once</span>
+                </button>
+              </div>
+            </div>
+
+            @if ((editingDs.sourceType || 'url') === 'url') {
+              <div class="form-group">
+                <label>URL</label>
+                <input type="text" class="form-input" [(ngModel)]="editingDs.url" placeholder="https://api.example.com/metrics" />
+                <p class="hint">The API must return JSON.</p>
+              </div>
+              <div class="ds-two-col">
+                <div class="form-group">
+                  <label>Method</label>
+                  <select class="form-select" [(ngModel)]="editingDs.method">
+                    <option value="GET">GET</option>
+                    <option value="POST">POST</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Refresh every (seconds)</label>
+                  <input type="number" class="form-input" [(ngModel)]="editingDs.refreshInterval" min="30" max="86400" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Headers (optional)</label>
+                <p class="hint">Add things like <code>Authorization: Bearer …</code> or <code>X-API-Key</code>.</p>
+                @if (headerKeys().length > 0) {
+                  <div class="ds-header-list">
+                    @for (k of headerKeys(); track k) {
+                      <div class="ds-header-row">
+                        <code>{{ k }}</code>
+                        <span>:</span>
+                        <code class="ds-header-val">{{ editingDs.headers![k] }}</code>
+                        <button class="btn-micro" (click)="removeHeader(k)" type="button">✕</button>
+                      </div>
+                    }
+                  </div>
+                }
+                <div class="ds-header-add">
+                  <input type="text" class="form-input" [(ngModel)]="dsHeaderKey" placeholder="Header name" />
+                  <input type="text" class="form-input" [(ngModel)]="dsHeaderVal" placeholder="Value" />
+                  <button class="btn btn-ghost btn-sm" type="button" (click)="addHeader()">+ Add</button>
+                </div>
+              </div>
+            } @else {
+              <div class="form-group">
+                <label>Upload a JSON file</label>
+                <label class="ds-json-drop" [class.uploading]="dsJsonUploading()">
+                  @if (dsJsonUploading()) {
+                    <span class="spinner"></span><strong>Reading…</strong>
+                  } @else if (dsJsonFilename()) {
+                    <span class="ds-json-icon">📄</span>
+                    <div>
+                      <strong>{{ dsJsonFilename() }}</strong>
+                      <span>Click to replace</span>
+                    </div>
+                  } @else if (editingDs.data != null) {
+                    <span class="ds-json-icon">✓</span>
+                    <div>
+                      <strong>JSON loaded</strong>
+                      <span>Click to upload a different file</span>
+                    </div>
+                  } @else {
+                    <span class="ds-json-icon">📤</span>
+                    <div>
+                      <strong>Click to upload .json</strong>
+                      <span>Max 5 MB. The file is parsed and stored.</span>
+                    </div>
+                  }
+                  <input type="file" accept=".json,application/json" hidden (change)="onJsonFileSelected($event)" />
+                </label>
+                @if (editingDs.data != null) {
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="clearJsonData()" style="margin-top:6px;">Remove JSON</button>
+                }
+              </div>
+
+              <div class="form-group">
+                <label>Or paste JSON directly</label>
+                <textarea class="form-textarea ds-json-paste"
+                          rows="8"
+                          [(ngModel)]="dsJsonText"
+                          (blur)="parseJsonPaste()"
+                          placeholder='{ "items": [ { "name": "...", "value": 12 } ] }'></textarea>
+                <div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="parseJsonPaste()">✓ Parse</button>
+                  @if (dsJsonError()) {
+                    <span class="ds-test-banner ds-test-err" style="margin:0;padding:4px 10px;">{{ dsJsonError() }}</span>
+                  } @else if (editingDs.data != null) {
+                    <span class="ds-test-banner ds-test-ok" style="margin:0;padding:4px 10px;">✓ Valid JSON</span>
+                  }
+                </div>
+              </div>
+            }
+
+            <div class="form-group">
+              <label>Data path (optional)</label>
+              <input type="text" class="form-input" [(ngModel)]="editingDs.dataPath" placeholder="e.g. data.results" />
+              <p class="hint">
+                If the array you want lives inside the JSON (like <code>{{ '{' }}data: {{ '{' }} results: [...] {{ '}' }}{{ '}' }}</code>),
+                type <code>data.results</code>. Leave blank if the whole payload is the data.
+              </p>
+            </div>
+
+            @if ((editingDs.sourceType || 'url') === 'url') {
+              <label class="checkbox-row">
+                <input type="checkbox" [(ngModel)]="editingDs.isActive" />
+                <span>Active (auto-refresh on the interval)</span>
+              </label>
+            }
+          </div>
+
+          <div class="ds-form-col">
+            <div class="ds-test-pane">
+              @if ((editingDs.sourceType || 'url') === 'url') {
+                <div class="ds-test-head">
+                  <strong>Test the connection</strong>
+                  <button class="btn btn-primary btn-sm" type="button" (click)="testDs()" [disabled]="!editingDs.url || dsTesting()">
+                    @if (dsTesting()) { <span class="spinner"></span> Testing… }
+                    @else { ▶ Run test }
+                  </button>
+                </div>
+                <p class="hint">Fetches once without saving so you can see the response shape.</p>
+
+                @if (dsTestResult(); as r) {
+                  @if (r.status === 'success') {
+                    <div class="ds-test-banner ds-test-ok">✓ Connection succeeded</div>
+                  } @else {
+                    <div class="ds-test-banner ds-test-err">✕ {{ r.error }}</div>
+                  }
+                  @if (r.preview !== undefined && r.preview !== null) {
+                    <label class="ds-test-label">After applying data path:</label>
+                    <pre class="ds-preview">{{ previewJson(r.preview) }}</pre>
+                  }
+                  @if (r.data !== undefined && r.data !== null) {
+                    <label class="ds-test-label">Raw response:</label>
+                    <pre class="ds-preview">{{ previewJson(r.data) }}</pre>
+                  }
+                }
+              } @else {
+                <div class="ds-test-head">
+                  <strong>JSON preview</strong>
+                </div>
+                <p class="hint">This is the data widgets will see. Use the “Data path” on the left to drill into nested structures.</p>
+                @if (editingDs.data != null) {
+                  <label class="ds-test-label">Stored JSON:</label>
+                  <pre class="ds-preview">{{ previewJson(editingDs.data) }}</pre>
+                } @else {
+                  <div class="ds-empty" style="padding:24px 12px;">
+                    <span class="ds-empty-icon">📄</span>
+                    <p style="margin:0;">No JSON loaded yet. Upload a file or paste JSON on the left.</p>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="closeDsModal()">Cancel</button>
+          <button class="btn btn-primary"
+                  (click)="saveDs()"
+                  [disabled]="!canSaveDs() || dsSaving()">
+            @if (dsSaving()) { <span class="spinner"></span> }
+            {{ editingDs._id ? 'Save changes' : 'Create data source' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

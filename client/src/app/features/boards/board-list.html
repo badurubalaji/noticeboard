@@ -1,0 +1,64 @@
+<div class="page-content animate-fade-in">
+  <div class="page-header">
+    <div>
+      <h1>Display Boards</h1>
+      <p class="subtitle">Configure screens for TVs, tablets, and kiosks</p>
+    </div>
+    <a routerLink="/boards/new" class="btn btn-primary"><span>+</span> New Board</a>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center"><div class="spinner spinner-lg"></div></div>
+  } @else if (boards().length === 0) {
+    <div class="empty-state">
+      <div class="icon">📺</div>
+      <h3>No boards configured</h3>
+      <p>Create a display board to show notices on your screens</p>
+      <a routerLink="/boards/new" class="btn btn-primary">Create Board</a>
+    </div>
+  } @else {
+    <div class="boards-grid">
+      @for (board of boards(); track board._id) {
+        <div class="board-card">
+          <div class="board-header">
+            <div class="board-icon">📺</div>
+            <div>
+              <h3>{{ board.name }}</h3>
+              <span class="board-mode">{{ board.displayMode | titlecase }} · {{ board.layout.columns }}×{{ board.layout.rows }}</span>
+            </div>
+          </div>
+
+          <div class="board-details">
+            <div class="detail-row">
+              <span class="detail-label">Carousel</span>
+              <span class="detail-value">{{ board.carousel.autoPlay ? board.carousel.interval + 's' : 'Off' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Auto Scroll</span>
+              <span class="detail-value">{{ board.autoScroll.enabled ? 'On' : 'Off' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Transition</span>
+              <span class="detail-value">{{ board.carousel.transition | titlecase }}</span>
+            </div>
+          </div>
+
+          <div class="board-url">
+            <input type="text" class="form-input" [value]="getDisplayUrl(board._id)" readonly />
+            <button class="btn btn-secondary btn-sm" (click)="copyUrl(board._id)">📋 Copy</button>
+          </div>
+
+          <div class="board-actions">
+            <a [href]="'/display/' + board._id" target="_blank" class="btn btn-primary btn-sm">
+              Open Display ↗
+            </a>
+            <a [routerLink]="['/boards', board._id, 'edit']" class="btn btn-secondary btn-sm">
+              ✏️ Edit
+            </a>
+            <button class="btn btn-ghost btn-sm" (click)="deleteBoard(board._id)">🗑️</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

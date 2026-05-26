@@ -1,0 +1,129 @@
+<div class="page-content animate-fade-in">
+  <div class="page-header">
+    <div>
+      <h1>Notices</h1>
+      <p class="subtitle">Manage all your notices</p>
+    </div>
+    <a routerLink="/notices/new" class="btn btn-primary">
+      <span>+</span> New Notice
+    </a>
+  </div>
+
+  <!-- Filters Bar -->
+  <div class="filters-bar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        class="form-input search-input"
+        placeholder="Search notices..."
+        [(ngModel)]="filters.search"
+        (keyup.enter)="onSearch()"
+      />
+    </div>
+
+    <select class="form-select filter-select" [(ngModel)]="filters.status" (change)="onSearch()">
+      <option value="">All Status</option>
+      <option value="draft">Draft</option>
+      <option value="active">Active</option>
+      <option value="scheduled">Scheduled</option>
+      <option value="expired">Expired</option>
+      <option value="archived">Archived</option>
+    </select>
+
+    <select class="form-select filter-select" [(ngModel)]="filters.category" (change)="onSearch()">
+      <option value="">All Categories</option>
+      @for (cat of categories(); track cat._id) {
+        <option [value]="cat._id">{{ cat.name }}</option>
+      }
+    </select>
+
+    <select class="form-select filter-select" [(ngModel)]="filters.priority" (change)="onSearch()">
+      <option value="">All Priority</option>
+      <option value="1">Critical</option>
+      <option value="2">High</option>
+      <option value="3">Medium</option>
+      <option value="4">Low</option>
+      <option value="5">Info</option>
+    </select>
+  </div>
+
+  <!-- Notices Table -->
+  @if (loading()) {
+    <div class="loading-center"><div class="spinner spinner-lg"></div></div>
+  } @else if (notices().length === 0) {
+    <div class="empty-state">
+      <div class="icon">📝</div>
+      <h3>No notices found</h3>
+      <p>Create your first notice or adjust your filters</p>
+      <a routerLink="/notices/new" class="btn btn-primary">Create Notice</a>
+    </div>
+  } @else {
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (notice of notices(); track notice._id) {
+            <tr>
+              <td>
+                <div class="notice-title-cell">
+                  <span class="title">{{ notice.title }}</span>
+                  <span class="author">by {{ notice.createdBy?.name || 'Unknown' }}</span>
+                </div>
+              </td>
+              <td><span class="badge badge-{{ notice.status }}">{{ notice.status }}</span></td>
+              <td><span class="badge badge-priority-{{ notice.priority }}">{{ getPriorityLabel(notice.priority) }}</span></td>
+              <td>
+                @if (notice.category) {
+                  <span class="cat-badge" [style.background]="notice.category.color + '22'" [style.color]="notice.category.color">
+                    {{ notice.category.name }}
+                  </span>
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+              <td><span class="type-badge">{{ notice.type }}</span></td>
+              <td class="text-muted">{{ notice.createdAt | date:'short' }}</td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn btn-ghost btn-icon" (click)="toggleStatus(notice)" title="Toggle Status">
+                    {{ notice.status === 'active' ? '⏸' : '▶' }}
+                  </button>
+                  <a [routerLink]="['/notices', notice._id, 'edit']" class="btn btn-ghost btn-icon" title="Edit">
+                    ✏️
+                  </a>
+                  <button class="btn btn-ghost btn-icon" (click)="deleteNotice(notice._id)" title="Delete">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (pagination().pages > 1) {
+      <div class="pagination">
+        <button class="btn btn-secondary btn-sm" (click)="prevPage()" [disabled]="pagination().page <= 1">
+          ← Previous
+        </button>
+        <span class="page-info">Page {{ pagination().page }} of {{ pagination().pages }}</span>
+        <button class="btn btn-secondary btn-sm" (click)="nextPage()" [disabled]="pagination().page >= pagination().pages">
+          Next →
+        </button>
+      </div>
+    }
+  }
+</div>

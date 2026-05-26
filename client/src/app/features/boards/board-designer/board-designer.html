@@ -1,0 +1,681 @@
+<div class="designer-layout" (click)="deselectWidget()">
+  <!-- Top Bar -->
+  <div class="designer-topbar">
+    <div class="topbar-left">
+      <a routerLink="/boards" class="btn btn-ghost btn-sm">← Boards</a>
+      <h2 class="designer-title">{{ board()?.name || 'Board Designer' }}</h2>
+    </div>
+    <div class="topbar-center">
+      <!-- Page Tabs -->
+      <div class="page-tabs">
+        @for (page of pages(); track page.id; let i = $index) {
+          <button
+            class="page-tab"
+            [class.active]="i === activePageIndex()"
+            (click)="selectPage(i); $event.stopPropagation()"
+          >
+            <span class="page-tab-name" (dblclick)="renamePage(i); $event.stopPropagation()">{{ page.name }}</span>
+            @if (pages().length > 1) {
+              <span class="page-tab-close" (click)="removePage(i); $event.stopPropagation()">×</span>
+            }
+          </button>
+        }
+        <button class="page-tab add-page" (click)="addPage(); $event.stopPropagation()" title="Add page">+</button>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost btn-sm" (click)="previewMode.set(!previewMode()); $event.stopPropagation()">
+        {{ previewMode() ? '✏️ Edit' : '👁️ Preview' }}
+      </button>
+      <button class="btn btn-secondary btn-sm" (click)="save(); $event.stopPropagation()" [disabled]="saving()">
+        @if (saving()) { <span class="spinner"></span> }
+        💾 Save
+      </button>
+      <button class="btn btn-primary btn-sm" (click)="saveAndExit(); $event.stopPropagation()" [disabled]="saving()">
+        Save & Exit
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="designer-loading">
+      <div class="spinner spinner-lg"></div>
+      <p>Loading board...</p>
+    </div>
+  } @else {
+    <div class="designer-body">
+      <!-- Widget Palette (Left Sidebar) -->
+      @if (!previewMode()) {
+        <div class="widget-palette" (click)="$event.stopPropagation()">
+          <h3 class="palette-title">Widgets</h3>
+          <p class="palette-hint">Drag onto the grid</p>
+          @for (wt of widgetTypes; track wt.type) {
+            <div
+              class="palette-item"
+              draggable="true"
+              (dragstart)="onPaletteDragStart($event, wt.type)"
+            >
+              <span class="palette-icon">{{ wt.icon }}</span>
+              <span class="palette-label">{{ wt.label }}</span>
+            </div>
+          }
+
+          <div class="palette-divider"></div>
+
+          <h3 class="palette-title">Grid</h3>
+          <div class="grid-config">
+            <div class="config-row">
+              <label>Columns</label>
+              <input type="number" class="config-input" [ngModel]="gridCols()" (ngModelChange)="gridCols.set($event)" min="1" max="8" />
+            </div>
+            <div class="config-row">
+              <label>Rows</label>
+              <input type="number" class="config-input" [ngModel]="gridRows()" (ngModelChange)="gridRows.set($event)" min="1" max="6" />
+            </div>
+          </div>
+
+          <div class="palette-divider"></div>
+
+          <h3 class="palette-title">Carousel</h3>
+          <div class="grid-config">
+            <div class="config-row">
+              <label>Auto-play</label>
+              <select class="config-input" [ngModel]="pageCarouselEnabled()" (ngModelChange)="pageCarouselEnabled.set($event)">
+                <option [ngValue]="true">On</option>
+                <option [ngValue]="false">Off</option>
+              </select>
+            </div>
+            <div class="config-row">
+              <label>Interval (s)</label>
+              <input type="number" class="config-input" [ngModel]="pageCarouselInterval()" (ngModelChange)="pageCarouselInterval.set($event)" min="3" max="120" />
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Grid Canvas -->
+      <div class="grid-canvas-wrapper" [class.preview-mode]="previewMode()">
+        <div
+          class="grid-canvas"
+          [style.grid-template-columns]="'repeat(' + gridCols() + ', 1fr)'"
+          [style.grid-template-rows]="'repeat(' + gridRows() + ', 1fr)'"
+        >
+          <!-- Grid cells (drop targets) -->
+          @for (cell of getGridCells(); track cell.col + '-' + cell.row) {
+            @if (!getWidgetAtCell(cell.col, cell.row)) {
+              <div
+                class="grid-cell empty-cell"
+                [style.grid-column]="cell.col"
+                [style.grid-row]="cell.row"
+                (dragover)="onGridCellDragOver($event)"
+                (drop)="onGridCellDrop($event, cell.col, cell.row)"
+              >
+                @if (!previewMode()) {
+                  <span class="cell-label">{{ cell.col }},{{ cell.row }}</span>
+                }
+              </div>
+            }
+          }
+
+          <!-- Placed Widgets -->
+          @if (activePage()) {
+            @for (widget of activePage()!.widgets; track widget.id) {
+              <div
+                class="grid-widget"
+                [class.selected]="widget.id === selectedWidgetId()"
+                [style.grid-column]="widget.gridCol + ' / span ' + widget.colSpan"
+                [style.grid-row]="widget.gridRow + ' / span ' + widget.rowSpan"
+                [style.background-color]="widget.style.bgColor || 'rgba(255,255,255,0.05)'"
+                [style.color]="widget.style.textColor || '#f1f5f9'"
+                [style.border-radius.px]="widget.style.borderRadius"
+                [style.padding.px]="widget.style.padding"
+                [attr.draggable]="!previewMode()"
+                (dragstart)="onWidgetDragStart($event, widget.id)"
+                (click)="selectWidget(widget.id, $event)"
+              >
+                <div class="widget-header">
+                  <span class="widget-type-badge">{{ widget.type }}</span>
+                  <span class="widget-title-label">{{ widget.title }}</span>
+                  @if (!previewMode() && widget.id === selectedWidgetId()) {
+                    <button class="widget-delete" (click)="deleteWidget(widget.id); $event.stopPropagation()">🗑️</button>
+                  }
+                </div>
+
+                <div class="widget-body">
+                  <!-- CHART PREVIEW -->
+                  @if (widget.type === 'chart') {
+                    <div class="chart-preview">
+                      @if (widget.config.chartType === 'bar' || widget.config.chartType === 'line') {
+                        <div class="bar-chart">
+                          @for (val of widget.config.chartData?.values || []; track $index) {
+                            <div class="bar-group">
+                              <div
+                                class="bar"
+                                [style.height.%]="(val / (maxChartValue(widget) || 1)) * 100"
+                                [style.background]="(widget.config.chartData?.colors || [])[$index] || '#3b82f6'"
+                              ></div>
+                              <span class="bar-label">{{ (widget.config.chartData?.labels || [])[$index] }}</span>
+                            </div>
+                          }
+                        </div>
+                      }
+                      @if (widget.config.chartType === 'pie' || widget.config.chartType === 'doughnut') {
+                        <div class="pie-chart-container">
+                          <svg viewBox="0 0 100 100" class="pie-chart-svg">
+                            @for (slice of getPieSlices(widget); track $index) {
+                              <circle
+                                cx="50" cy="50"
+                                [attr.r]="widget.config.chartType === 'doughnut' ? 30 : 40"
+                                fill="transparent"
+                                [attr.stroke]="slice.color"
+                                [attr.stroke-width]="widget.config.chartType === 'doughnut' ? 15 : 40"
+                                [attr.stroke-dasharray]="slice.dashArray"
+                                [attr.stroke-dashoffset]="slice.offset"
+                                [attr.transform]="'rotate(-90 50 50)'"
+                              />
+                            }
+                          </svg>
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  <!-- TABLE PREVIEW -->
+                  @if (widget.type === 'table') {
+                    <div class="table-preview">
+                      <table>
+                        <thead>
+                          <tr>
+                            @for (h of widget.config.tableHeaders || []; track $index) {
+                              <th>{{ h }}</th>
+                            }
+                            @if (widget.config.tableShowRowTotals) {
+                              <th class="total-cell">{{ widget.config.tableRowTotalLabel || 'Total' }}</th>
+                            }
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (row of widget.config.tableRows || []; track $index; let ri = $index) {
+                            <tr>
+                              @for (cell of row; track $index) {
+                                <td>{{ cell }}</td>
+                              }
+                              @if (widget.config.tableShowRowTotals) {
+                                <td class="total-cell">{{ rowTotal(row) }}</td>
+                              }
+                            </tr>
+                          }
+                          @if (widget.config.tableShowColumnTotals) {
+                            <tr class="totals-row">
+                              @for (h of widget.config.tableHeaders || []; track $index; let ci = $index) {
+                                <td>
+                                  @if (ci === 0) { <strong>{{ widget.config.tableColumnTotalLabel || 'Total' }}</strong> }
+                                  @else { {{ columnTotal(widget, ci) }} }
+                                </td>
+                              }
+                              @if (widget.config.tableShowRowTotals) {
+                                <td class="total-cell">{{ grandTotal(widget) }}</td>
+                              }
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+
+                  <!-- IMAGE PREVIEW -->
+                  @if (widget.type === 'image') {
+                    <div class="image-preview" [ngStyle]="getImageWrapStyle(widget)">
+                      @if (widget.config.imageUrl) {
+                        <img [src]="widget.config.imageUrl" [ngStyle]="getImageStyle(widget)" alt="Widget image" />
+                      } @else {
+                        <div class="image-placeholder">🖼️ No image selected</div>
+                      }
+                    </div>
+                  }
+
+                  <!-- TEMPLATE PREVIEW -->
+                  @if (widget.type === 'template') {
+                    <div class="template-preview">
+                      @if (widget.config.templateId) {
+                        <div class="template-badge">📄 Template Applied</div>
+                      } @else {
+                        <div class="template-placeholder">📄 No template selected</div>
+                      }
+                    </div>
+                  }
+
+                  <!-- NOTICE PREVIEW -->
+                  @if (widget.type === 'notice') {
+                    <div class="notice-preview">
+                      @if (widget.config.noticeId) {
+                        <div class="notice-badge">📌 Notice Linked</div>
+                      } @else {
+                        <div class="notice-placeholder">📌 No notice selected</div>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <!-- Resize handles -->
+                @if (!previewMode() && widget.id === selectedWidgetId()) {
+                  <div class="resize-handles">
+                    <button class="resize-btn resize-right" (click)="resizeWidget(widget.id, 'right', $event)" title="Expand right">→</button>
+                    <button class="resize-btn resize-left" (click)="resizeWidget(widget.id, 'left', $event)" title="Shrink left">←</button>
+                    <button class="resize-btn resize-down" (click)="resizeWidget(widget.id, 'down', $event)" title="Expand down">↓</button>
+                    <button class="resize-btn resize-up" (click)="resizeWidget(widget.id, 'up', $event)" title="Shrink up">↑</button>
+                  </div>
+                }
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Properties Panel (Right Sidebar) -->
+      @if (!previewMode() && selectedWidget()) {
+        <div class="properties-panel" (click)="$event.stopPropagation()">
+          <h3 class="panel-title">Widget Properties</h3>
+
+          <!-- Common Properties -->
+          <div class="prop-section">
+            <div class="prop-group">
+              <label>Title</label>
+              <input type="text" class="prop-input" [ngModel]="selectedWidget()!.title" (ngModelChange)="updateWidgetProp('title', $event)" />
+            </div>
+            <div class="prop-row">
+              <div class="prop-group">
+                <label>Col Span</label>
+                <input type="number" class="prop-input" [ngModel]="selectedWidget()!.colSpan" (ngModelChange)="updateWidgetProp('colSpan', $event)" min="1" [max]="gridCols()" />
+              </div>
+              <div class="prop-group">
+                <label>Row Span</label>
+                <input type="number" class="prop-input" [ngModel]="selectedWidget()!.rowSpan" (ngModelChange)="updateWidgetProp('rowSpan', $event)" min="1" [max]="gridRows()" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Style -->
+          <div class="prop-section">
+            <h4 class="prop-section-title">Style</h4>
+            <div class="prop-row">
+              <div class="prop-group">
+                <label>BG Color</label>
+                <input type="color" class="prop-input prop-color" [ngModel]="selectedWidget()!.style.bgColor || '#1a1f35'" (ngModelChange)="updateWidgetProp('style.bgColor', $event)" />
+              </div>
+              <div class="prop-group">
+                <label>Text Color</label>
+                <input type="color" class="prop-input prop-color" [ngModel]="selectedWidget()!.style.textColor || '#f1f5f9'" (ngModelChange)="updateWidgetProp('style.textColor', $event)" />
+              </div>
+            </div>
+            <div class="prop-row">
+              <div class="prop-group">
+                <label>Radius</label>
+                <input type="number" class="prop-input" [ngModel]="selectedWidget()!.style.borderRadius" (ngModelChange)="updateWidgetProp('style.borderRadius', $event)" min="0" max="40" />
+              </div>
+              <div class="prop-group">
+                <label>Padding</label>
+                <input type="number" class="prop-input" [ngModel]="selectedWidget()!.style.padding" (ngModelChange)="updateWidgetProp('style.padding', $event)" min="0" max="64" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Type-specific Config -->
+          @if (selectedWidget()!.type === 'chart') {
+            <div class="prop-section">
+              <h4 class="prop-section-title">Chart Config</h4>
+              <div class="prop-group">
+                <label>Chart Type</label>
+                <select class="prop-input" [ngModel]="selectedWidget()!.config.chartType" (ngModelChange)="updateWidgetProp('config.chartType', $event)">
+                  <option value="bar">Bar</option>
+                  <option value="line">Line</option>
+                  <option value="pie">Pie</option>
+                  <option value="doughnut">Doughnut</option>
+                </select>
+              </div>
+              <div class="chart-data-editor">
+                <div class="data-header">
+                  <span>Label</span><span>Value</span><span></span>
+                </div>
+                @for (label of selectedWidget()!.config.chartData?.labels || []; track $index; let i = $index) {
+                  <div class="data-row">
+                    <input type="text" class="prop-input-sm" [ngModel]="label" (ngModelChange)="updateChartLabel(i, $event)" />
+                    <input type="number" class="prop-input-sm" [ngModel]="(selectedWidget()!.config.chartData?.values || [])[i]" (ngModelChange)="updateChartValue(i, $event)" />
+                    <button class="btn-micro" (click)="removeChartEntry(i)">✕</button>
+                  </div>
+                }
+                <button class="btn btn-ghost btn-sm" (click)="addChartEntry()">+ Add Entry</button>
+              </div>
+            </div>
+          }
+
+          @if (selectedWidget()!.type === 'table') {
+            <div class="prop-section">
+              <h4 class="prop-section-title">Table Config</h4>
+              <div class="table-editor">
+                <div class="table-editor-headers">
+                  @for (h of selectedWidget()!.config.tableHeaders || []; track $index; let i = $index) {
+                    <input type="text" class="prop-input-sm" [ngModel]="h" (ngModelChange)="updateTableHeader(i, $event)" placeholder="Header" />
+                  }
+                  <button class="btn-micro" (click)="addTableColumn()">+Col</button>
+                </div>
+                @for (row of selectedWidget()!.config.tableRows || []; track $index; let ri = $index) {
+                  <div class="table-editor-row">
+                    @for (cell of row; track $index; let ci = $index) {
+                      <input type="text" class="prop-input-sm" [ngModel]="cell" (ngModelChange)="updateTableCell(ri, ci, $event)" />
+                    }
+                    <button class="btn-micro" (click)="removeTableRow(ri)">✕</button>
+                  </div>
+                }
+                <button class="btn btn-ghost btn-sm" (click)="addTableRow()">+ Add Row</button>
+              </div>
+            </div>
+            <div class="prop-section">
+              <h4 class="prop-section-title">Totals</h4>
+              <p class="prop-hint">Only numeric cells are added. Text cells are ignored.</p>
+              <label class="prop-check">
+                <input type="checkbox"
+                       [ngModel]="!!selectedWidget()!.config.tableShowColumnTotals"
+                       (ngModelChange)="updateWidgetProp('config.tableShowColumnTotals', $event)" />
+                <span>Show totals row (sum each column)</span>
+              </label>
+              <label class="prop-check">
+                <input type="checkbox"
+                       [ngModel]="!!selectedWidget()!.config.tableShowRowTotals"
+                       (ngModelChange)="updateWidgetProp('config.tableShowRowTotals', $event)" />
+                <span>Show totals column (sum each row)</span>
+              </label>
+              @if (selectedWidget()!.config.tableShowRowTotals) {
+                <div class="prop-group">
+                  <label>Row-total column header</label>
+                  <input type="text" class="prop-input"
+                         [ngModel]="selectedWidget()!.config.tableRowTotalLabel || 'Total'"
+                         (ngModelChange)="updateWidgetProp('config.tableRowTotalLabel', $event)" />
+                </div>
+              }
+              @if (selectedWidget()!.config.tableShowColumnTotals) {
+                <div class="prop-group">
+                  <label>Totals-row label</label>
+                  <input type="text" class="prop-input"
+                         [ngModel]="selectedWidget()!.config.tableColumnTotalLabel || 'Total'"
+                         (ngModelChange)="updateWidgetProp('config.tableColumnTotalLabel', $event)" />
+                </div>
+              }
+            </div>
+          }
+
+          @if (selectedWidget()!.type === 'image') {
+            <div class="prop-section">
+              <h4 class="prop-section-title">Image</h4>
+
+              <div class="prop-group">
+                <label
+                  class="image-dropzone"
+                  [class.uploading]="uploadingImage()"
+                  (drop)="onImageWidgetDrop($event)"
+                  (dragover)="onImageWidgetDragOver($event)"
+                >
+                  @if (uploadingImage()) {
+                    <span class="spinner"></span>
+                    <strong>Uploading…</strong>
+                  } @else if (selectedWidget()!.config.imageUrl) {
+                    <img class="dropzone-thumb" [src]="selectedWidget()!.config.imageUrl" alt="" />
+                    <div class="dropzone-text">
+                      <strong>Replace image</strong>
+                      <span>Click or drop a new image here</span>
+                    </div>
+                  } @else {
+                    <span class="dropzone-icon">📤</span>
+                    <div class="dropzone-text">
+                      <strong>Click to upload or drop an image</strong>
+                      <span>PNG, JPG, WebP, GIF or SVG</span>
+                    </div>
+                  }
+                  <input type="file" accept="image/*" hidden (change)="onImageWidgetFileSelected($event)" />
+                </label>
+                @if (uploadError()) {
+                  <p class="prop-error">{{ uploadError() }}</p>
+                }
+              </div>
+
+              <div class="prop-group">
+                <label>Or paste an image URL</label>
+                <input type="text" class="prop-input"
+                       [ngModel]="selectedWidget()!.config.imageUrl"
+                       (ngModelChange)="updateWidgetProp('config.imageUrl', $event)"
+                       placeholder="https://..." />
+                @if (selectedWidget()!.config.imageUrl) {
+                  <button class="btn btn-ghost btn-sm" type="button"
+                          (click)="updateWidgetProp('config.imageUrl', '')"
+                          style="margin-top:6px;">
+                    Remove image
+                  </button>
+                }
+              </div>
+
+              @if (mediaList().length) {
+                <div class="prop-group">
+                  <label>Or pick from media library</label>
+                  <div class="media-thumbnails">
+                    @for (m of mediaList(); track m._id) {
+                      @if (m.type === 'image') {
+                        <img
+                          [src]="m.thumbnail || m.url"
+                          class="media-thumb"
+                          [class.selected]="selectedWidget()!.config.imageUrl === m.url"
+                          (click)="updateWidgetProp('config.imageUrl', m.url)"
+                          [alt]="m.originalName"
+                        />
+                      }
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+            <div class="prop-section">
+              <h4 class="prop-section-title">Fit &amp; Size</h4>
+              <div class="prop-group">
+                <label>Fit mode</label>
+                <select class="prop-input"
+                        [ngModel]="selectedWidget()!.config.imageFit || 'cover'"
+                        (ngModelChange)="updateWidgetProp('config.imageFit', $event)">
+                  <option value="cover">Fill widget (crop to fit)</option>
+                  <option value="contain">Fit inside (show whole image)</option>
+                  <option value="fill">Stretch (may distort)</option>
+                  <option value="none">Original size</option>
+                </select>
+                <p class="prop-hint">
+                  <strong>Fill widget</strong> = no empty space, may crop.
+                  <strong>Fit inside</strong> = shows full image, may leave bars.
+                </p>
+              </div>
+              <label class="prop-check">
+                <input type="checkbox"
+                       [ngModel]="!!selectedWidget()!.config.imageEdgeToEdge"
+                       (ngModelChange)="updateWidgetProp('config.imageEdgeToEdge', $event)" />
+                <span>Edge-to-edge (ignore widget padding)</span>
+              </label>
+              <div class="prop-group">
+                <label>Width: {{ selectedWidget()!.config.imageWidthPct || 100 }}%</label>
+                <input type="range" min="10" max="100" step="5"
+                       [ngModel]="selectedWidget()!.config.imageWidthPct || 100"
+                       (ngModelChange)="updateWidgetProp('config.imageWidthPct', +$event)" />
+              </div>
+              <div class="prop-group">
+                <label>Height: {{ selectedWidget()!.config.imageHeightPct || 100 }}%</label>
+                <input type="range" min="10" max="100" step="5"
+                       [ngModel]="selectedWidget()!.config.imageHeightPct || 100"
+                       (ngModelChange)="updateWidgetProp('config.imageHeightPct', +$event)" />
+              </div>
+              <div class="prop-group">
+                <label>Alignment</label>
+                <select class="prop-input"
+                        [ngModel]="selectedWidget()!.config.imagePosition || 'center'"
+                        (ngModelChange)="updateWidgetProp('config.imagePosition', $event)">
+                  <option value="center">Center</option>
+                  <option value="top">Top</option>
+                  <option value="bottom">Bottom</option>
+                  <option value="left">Left</option>
+                  <option value="right">Right</option>
+                </select>
+              </div>
+              <div class="prop-group">
+                <label>Background behind image</label>
+                <div class="color-picker">
+                  <input type="color"
+                         [ngModel]="selectedWidget()!.config.imageBgColor || '#000000'"
+                         (ngModelChange)="updateWidgetProp('config.imageBgColor', $event)" />
+                  <input type="text" class="prop-input"
+                         [ngModel]="selectedWidget()!.config.imageBgColor || ''"
+                         (ngModelChange)="updateWidgetProp('config.imageBgColor', $event)"
+                         placeholder="transparent" />
+                </div>
+                <p class="prop-hint">Useful when “Fit inside” leaves empty space.</p>
+              </div>
+            </div>
+          }
+
+          @if (selectedWidget()!.type === 'template') {
+            <div class="prop-section">
+              <h4 class="prop-section-title">Template Config</h4>
+              <div class="prop-group">
+                <label>Template</label>
+                <select class="prop-input" [ngModel]="selectedWidget()!.config.templateId" (ngModelChange)="updateWidgetProp('config.templateId', $event)">
+                  <option value="">Select template...</option>
+                  @for (t of templates(); track t._id) {
+                    <option [value]="t._id">{{ t.name }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+          }
+
+          @if (selectedWidget()!.type === 'notice') {
+            <div class="prop-section">
+              <h4 class="prop-section-title">Notice</h4>
+              <div class="prop-group">
+                <label>Pick a notice to show</label>
+                <select class="prop-input"
+                        [ngModel]="selectedWidget()!.config.noticeId || ''"
+                        (ngModelChange)="updateWidgetProp('config.noticeId', $event)">
+                  <option value="">— Select a notice —</option>
+                  @for (n of noticesList(); track n._id) {
+                    <option [value]="n._id">{{ formatNoticeOption(n) }}</option>
+                  }
+                </select>
+                @if (noticesList().length === 0) {
+                  <p class="prop-hint">No notices yet. Create one in <a routerLink="/notices" target="_blank">Notices</a> first.</p>
+                } @else {
+                  <p class="prop-hint">Shows the chosen notice with its title, content, and media.</p>
+                }
+              </div>
+            </div>
+          }
+
+          @if (selectedWidget()!.type === 'table' || selectedWidget()!.type === 'chart') {
+            <div class="prop-section">
+              <h4 class="prop-section-title">🔗 Data source</h4>
+              <p class="prop-hint">Bind this widget to live data from an API. The auto-refresh handles updates.</p>
+
+              <div class="prop-group">
+                <label>Source</label>
+                <select class="prop-input"
+                        [ngModel]="selectedWidget()!.config.dataSourceId || ''"
+                        (ngModelChange)="updateWidgetProp('config.dataSourceId', $event)">
+                  <option value="">— No source (use static config above) —</option>
+                  @for (ds of dataSources(); track ds._id) {
+                    <option [value]="ds._id">{{ ds.name }} @if (!ds.isActive) { (paused) }</option>
+                  }
+                </select>
+                <p class="prop-hint">
+                  Need a new source? Add it under
+                  <a routerLink="/settings" target="_blank">Settings → Data Sources</a>.
+                </p>
+              </div>
+
+              @if (selectedWidget()!.config.dataSourceId) {
+                @if (getDataSource(selectedWidget()!.config.dataSourceId); as ds) {
+                  <div class="ds-bind-meta">
+                    @if (ds.lastFetchStatus === 'success') { ✓ Last fetched OK }
+                    @else if (ds.lastFetchStatus === 'error') { ✕ Last fetch failed: {{ ds.lastError }} }
+                    @else { Not fetched yet — click Refresh below }
+                  </div>
+                  <button class="btn btn-ghost btn-sm" type="button" (click)="refreshSelectedSource(selectedWidget()!)">↻ Refresh now</button>
+
+                  <div class="prop-group" style="margin-top:10px;">
+                    <label>Data path (override)</label>
+                    <input type="text" class="prop-input"
+                           [ngModel]="selectedWidget()!.config.dataSourcePath"
+                           (ngModelChange)="updateWidgetProp('config.dataSourcePath', $event)"
+                           [placeholder]="ds.dataPath || 'leave blank to use source default'" />
+                    <p class="prop-hint">Source default: <code>{{ ds.dataPath || '(none)' }}</code></p>
+                  </div>
+
+                  <div class="prop-group">
+                    <label>Row limit</label>
+                    <input type="number" class="prop-input" min="0" max="500"
+                           [ngModel]="selectedWidget()!.config.dataSourceRowLimit || 0"
+                           (ngModelChange)="updateWidgetProp('config.dataSourceRowLimit', +$event)" />
+                    <p class="prop-hint">0 = show all rows.</p>
+                  </div>
+
+                  @if (selectedWidget()!.type === 'table') {
+                    <div class="prop-group">
+                      <label>Columns</label>
+                      <p class="prop-hint">Which fields from each row to show, in order.</p>
+                      @if (dataSourceSampleKeys(selectedWidget()!).length > 0) {
+                        <button class="btn btn-ghost btn-sm" type="button"
+                                (click)="autoFillTableColumns(selectedWidget()!)">
+                          ✨ Auto-fill from sample
+                        </button>
+                      }
+                      @for (col of selectedWidget()!.config.dataSourceColumns || []; track $index; let i = $index) {
+                        <div class="ds-col-row">
+                          <input type="text" class="prop-input-sm"
+                                 [ngModel]="col.key"
+                                 (ngModelChange)="updateBoundColumn(selectedWidget()!, i, 'key', $event)"
+                                 placeholder="field key" />
+                          <input type="text" class="prop-input-sm"
+                                 [ngModel]="col.label"
+                                 (ngModelChange)="updateBoundColumn(selectedWidget()!, i, 'label', $event)"
+                                 placeholder="header" />
+                          <button class="btn-micro" type="button" (click)="removeBoundColumn(selectedWidget()!, i)">✕</button>
+                        </div>
+                      }
+                      <button class="btn btn-ghost btn-sm" type="button"
+                              (click)="addBoundColumn(selectedWidget()!)">+ Add column</button>
+                    </div>
+                  }
+
+                  @if (selectedWidget()!.type === 'chart') {
+                    <div class="prop-group">
+                      <label>Label field</label>
+                      <input type="text" class="prop-input"
+                             [ngModel]="selectedWidget()!.config.dataSourceLabelKey"
+                             (ngModelChange)="updateWidgetProp('config.dataSourceLabelKey', $event)"
+                             placeholder="e.g. name" />
+                      <p class="prop-hint">
+                        Available: {{ dataSourceSampleKeys(selectedWidget()!).join(', ') || '(no data yet)' }}
+                      </p>
+                    </div>
+                    <div class="prop-group">
+                      <label>Value field</label>
+                      <input type="text" class="prop-input"
+                             [ngModel]="selectedWidget()!.config.dataSourceValueKey"
+                             (ngModelChange)="updateWidgetProp('config.dataSourceValueKey', $event)"
+                             placeholder="e.g. count" />
+                    </div>
+                  }
+                }
+              }
+            </div>
+          }
+
+          <div class="prop-section">
+            <button class="btn btn-danger btn-sm" style="width: 100%" (click)="deleteWidget(selectedWidget()!.id)">🗑️ Delete Widget</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

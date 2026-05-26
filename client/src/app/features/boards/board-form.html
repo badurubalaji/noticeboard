@@ -1,0 +1,204 @@
+<div class="page-content animate-fade-in">
+  <div class="page-header">
+    <div>
+      <h1>{{ isEdit ? 'Edit Board' : 'New Board' }}</h1>
+      <p class="subtitle">Configure how notices display on this screen</p>
+    </div>
+    <a routerLink="/boards" class="btn btn-ghost">← Back</a>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center"><div class="spinner spinner-lg"></div></div>
+  } @else {
+    <div class="form-sections">
+      <!-- Basic Info -->
+      <div class="card">
+        <h3 class="section-title">Basic Info</h3>
+        <div class="form-group">
+          <label>Board Name</label>
+          <input type="text" class="form-input" [(ngModel)]="form.name" placeholder="Main Lobby TV" />
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" class="form-input" [(ngModel)]="form.description" placeholder="Optional description" />
+        </div>
+        <div class="form-group">
+          <label>Display Mode</label>
+          <select class="form-select" [(ngModel)]="form.displayMode">
+            <option value="carousel">Carousel (Slideshow)</option>
+            <option value="grid">Grid Layout</option>
+            <option value="list">Scrolling List</option>
+            <option value="single">Single Notice</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Layout -->
+      <div class="card">
+        <h3 class="section-title">Grid Layout</h3>
+        <div class="grid-3">
+          <div class="form-group">
+            <label>Columns</label>
+            <input type="number" class="form-input" [(ngModel)]="form.layout!.columns" min="1" max="6" />
+          </div>
+          <div class="form-group">
+            <label>Rows</label>
+            <input type="number" class="form-input" [(ngModel)]="form.layout!.rows" min="1" max="4" />
+          </div>
+          <div class="form-group">
+            <label>Gap (px)</label>
+            <input type="number" class="form-input" [(ngModel)]="form.layout!.gap" min="0" max="64" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Carousel Settings -->
+      <div class="card">
+        <h3 class="section-title">Carousel Settings</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Auto Play</label>
+            <select class="form-select" [(ngModel)]="form.carousel!.autoPlay">
+              <option [ngValue]="true">Enabled</option>
+              <option [ngValue]="false">Disabled</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Interval (seconds)</label>
+            <input type="number" class="form-input" [(ngModel)]="form.carousel!.interval" min="3" max="120" />
+          </div>
+          <div class="form-group">
+            <label>Transition</label>
+            <select class="form-select" [(ngModel)]="form.carousel!.transition">
+              <option value="slide">Slide</option>
+              <option value="fade">Fade</option>
+              <option value="flip">Flip</option>
+              <option value="zoom">Zoom</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Show Indicators</label>
+            <select class="form-select" [(ngModel)]="form.carousel!.showIndicators">
+              <option [ngValue]="true">Yes</option>
+              <option [ngValue]="false">No</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auto Scroll -->
+      <div class="card">
+        <h3 class="section-title">Auto Scroll</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Enabled</label>
+            <select class="form-select" [(ngModel)]="form.autoScroll!.enabled">
+              <option [ngValue]="true">Enabled</option>
+              <option [ngValue]="false">Disabled</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Speed (px/sec)</label>
+            <input type="number" class="form-input" [(ngModel)]="form.autoScroll!.speed" min="10" max="200" />
+          </div>
+          <div class="form-group">
+            <label>Direction</label>
+            <select class="form-select" [(ngModel)]="form.autoScroll!.direction">
+              <option value="up">Up</option>
+              <option value="down">Down</option>
+              <option value="left">Left</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Pause on Hover</label>
+            <select class="form-select" [(ngModel)]="form.autoScroll!.pauseOnHover">
+              <option [ngValue]="true">Yes</option>
+              <option [ngValue]="false">No</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Theme -->
+      <div class="card">
+        <h3 class="section-title">Theme & Appearance</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Background Color</label>
+            <input type="color" class="form-input color-input" [(ngModel)]="form.theme!.bgColor" />
+          </div>
+          <div class="form-group">
+            <label>Font Size</label>
+            <select class="form-select" [(ngModel)]="form.theme!.fontSize">
+              <option value="small">Small</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Show Clock</label>
+            <select class="form-select" [(ngModel)]="form.theme!.clockVisible">
+              <option [ngValue]="true">Yes</option>
+              <option [ngValue]="false">No</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Show Date</label>
+            <select class="form-select" [(ngModel)]="form.theme!.dateVisible">
+              <option [ngValue]="true">Yes</option>
+              <option [ngValue]="false">No</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Show Header</label>
+            <select class="form-select" [(ngModel)]="form.theme!.headerVisible">
+              <option [ngValue]="true">Yes</option>
+              <option [ngValue]="false">No</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Show Logo</label>
+            <select class="form-select" [(ngModel)]="form.theme!.logoVisible">
+              <option [ngValue]="true">Yes</option>
+              <option [ngValue]="false">No</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Header Text</label>
+          <input type="text" class="form-input" [(ngModel)]="form.theme!.headerText" placeholder="Company Notice Board" />
+        </div>
+      </div>
+
+      <!-- Pages Summary -->
+      @if (isEdit && form._id) {
+        <div class="card">
+          <h3 class="section-title">Board Pages & Widgets</h3>
+          <div class="pages-summary">
+            <div class="pages-info">
+              <span class="pages-count">{{ (form.pages || []).length || 0 }} page(s) configured</span>
+              <p class="pages-hint">Use the visual designer to add charts, tables, images, templates and arrange them with drag-and-drop</p>
+            </div>
+            <a [routerLink]="['/boards', boardId, 'design']" class="btn btn-secondary">
+              🎨 Open Designer
+            </a>
+          </div>
+        </div>
+      }
+
+      <div class="form-actions">
+        <button class="btn btn-primary btn-lg" (click)="save()" [disabled]="saving() || !form.name">
+          @if (saving()) { <span class="spinner"></span> }
+          {{ isEdit ? 'Update Board' : 'Create Board' }}
+        </button>
+        @if (isEdit && form._id) {
+          <a [routerLink]="['/boards', boardId, 'design']" class="btn btn-secondary btn-lg">
+            🎨 Design Layout
+          </a>
+        }
+      </div>
+    </div>
+  }
+</div>

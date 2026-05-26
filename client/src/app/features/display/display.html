@@ -1,0 +1,406 @@
+@if (loading()) {
+  <div class="display-status display-loading" [ngStyle]="brandStyles()">
+    <div class="status-card">
+      @if (branding().displayScreens.showLogo && branding().logo) {
+        <img class="status-logo" [src]="branding().logo" alt="logo" />
+      } @else if (branding().displayScreens.showLogo) {
+        <div class="status-logo-fallback" [style.background]="branding().primaryColor">
+          {{ (branding().tenantName || 'N').charAt(0).toUpperCase() }}
+        </div>
+      }
+      <div class="status-spinner" [style.border-top-color]="branding().primaryColor"></div>
+      <h2 class="status-title">{{ msgs().loadingTitle }}</h2>
+      <p class="status-subtitle">{{ msgs().loadingSubtitle }}</p>
+    </div>
+  </div>
+} @else if (error()) {
+  <div class="display-status display-error" [ngStyle]="brandStyles()">
+    <div class="status-card">
+      @if (branding().displayScreens.showLogo && branding().logo) {
+        <img class="status-logo" [src]="branding().logo" alt="logo" />
+      } @else if (branding().displayScreens.showLogo) {
+        <div class="status-logo-fallback" [style.background]="branding().primaryColor">
+          {{ (branding().tenantName || 'N').charAt(0).toUpperCase() }}
+        </div>
+      }
+      <div class="status-badge" [style.background]="branding().accentColor + '22'" [style.color]="branding().accentColor">
+        Unavailable
+      </div>
+      <h2 class="status-title">{{ msgs().unavailableTitle }}</h2>
+      <p class="status-subtitle">{{ msgs().unavailableSubtitle }}</p>
+    </div>
+  </div>
+} @else {
+  <div
+    class="display-board"
+    [style.background-color]="board()?.theme?.bgColor || '#0F172A'"
+    [style.font-family]="board()?.theme?.fontFamily || 'Inter, sans-serif'"
+    (mouseenter)="onMouseEnter()"
+    (mouseleave)="onMouseLeave()"
+  >
+    <!-- Header Bar -->
+    @if (board()?.theme?.headerVisible) {
+      <div class="display-header">
+        <div class="header-left">
+          @if (board()?.theme?.logoVisible) {
+            <span class="header-logo">📋</span>
+          }
+          <span class="header-title">{{ board()?.theme?.headerText || board()?.name || 'NoticeBoard' }}</span>
+        </div>
+        <div class="header-right">
+          @if (board()?.theme?.dateVisible) {
+            <span class="header-date">{{ currentDate() }}</span>
+          }
+          @if (board()?.theme?.clockVisible) {
+            <span class="header-clock">{{ currentTime() }}</span>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Content Area -->
+    <div class="display-content">
+
+      <!-- ========== WIDGET PAGES MODE ========== -->
+      @if (hasPages()) {
+        <div class="pages-display">
+          <!-- Stacked pages with transitions -->
+          <div class="pages-stack" [class]="getPagesTransitionClass()">
+          @for (page of board()!.pages!; track page.id; let pi = $index) {
+            <div [ngClass]="pageSlideClass(pi)">
+            <div class="widget-grid" [ngStyle]="getPageGridStyles()">
+              @for (widget of page.widgets; track widget.id) {
+                <div class="display-widget" [ngStyle]="getWidgetGridStyles(widget)">
+                  @if (widget.title) {
+                    <div class="widget-display-title">{{ widget.title }}</div>
+                  }
+                  <div class="widget-display-body">
+
+                    <!-- CHART WIDGET -->
+                    @if (widget.type === 'chart') {
+                      @let chartValues = isBoundChart(widget) ? getBoundChartValues(widget) : (widget.config.chartData?.values || []);
+                      @let chartLabels = isBoundChart(widget) ? getBoundChartLabels(widget) : (widget.config.chartData?.labels || []);
+                      @let chartMax = chartMax_(chartValues);
+                      <div class="display-chart">
+                        @if (chartValues.length === 0 && isBoundChart(widget)) {
+                          <div class="ds-no-data" style="margin:auto;">Waiting for data…</div>
+                        } @else {
+                          @if (widget.config.chartType === 'bar' || widget.config.chartType === 'line') {
+                            <div class="display-bar-chart">
+                              @for (val of chartValues; track $index) {
+                                <div class="display-bar-group">
+                                  <div class="display-bar-value">{{ val }}</div>
+                                  <div
+                                    class="display-bar"
+                                    [style.height.%]="(val / (chartMax || 1)) * 100"
+                                    [style.background]="(widget.config.chartData?.colors || [])[$index] || '#3b82f6'"
+                                  ></div>
+                                  <div class="display-bar-label">{{ chartLabels[$index] }}</div>
+                                </div>
+                              }
+                            </div>
+                          }
+                          @if (widget.config.chartType === 'pie' || widget.config.chartType === 'doughnut') {
+                            <div class="display-pie-container">
+                              <svg viewBox="0 0 100 100" class="display-pie-svg">
+                                @for (slice of getPieSlicesFromValues(widget, chartValues); track $index) {
+                                  <circle
+                                    cx="50" cy="50"
+                                    [attr.r]="widget.config.chartType === 'doughnut' ? 30 : 40"
+                                    fill="transparent"
+                                    [attr.stroke]="slice.color"
+                                    [attr.stroke-width]="widget.config.chartType === 'doughnut' ? 15 : 40"
+                                    [attr.stroke-dasharray]="slice.dashArray"
+                                    [attr.stroke-dashoffset]="slice.offset"
+                                    transform="rotate(-90 50 50)"
+                                  />
+                                }
+                              </svg>
+                              <div class="pie-legend">
+                                @for (label of chartLabels; track $index) {
+                                  <div class="pie-legend-item">
+                                    <span class="pie-legend-dot" [style.background]="(widget.config.chartData?.colors || [])[$index] || '#3b82f6'"></span>
+                                    <span>{{ label }}: {{ chartValues[$index] }}</span>
+                                  </div>
+                                }
+                              </div>
+                            </div>
+                          }
+                        }
+                      </div>
+                    }
+
+                    <!-- TABLE WIDGET -->
+                    @if (widget.type === 'table') {
+                      @let tableHeaders = isBoundTable(widget) ? getBoundTableHeaders(widget) : (widget.config.tableHeaders || []);
+                      @let tableRows = isBoundTable(widget) ? getBoundTableRows(widget) : (widget.config.tableRows || []);
+                      <div class="display-table-wrap">
+                        <table class="display-table">
+                          <thead>
+                            <tr>
+                              @for (h of tableHeaders; track $index) {
+                                <th>{{ h }}</th>
+                              }
+                              @if (widget.config.tableShowRowTotals) {
+                                <th class="total-cell">{{ widget.config.tableRowTotalLabel || 'Total' }}</th>
+                              }
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (row of tableRows; track $index) {
+                              <tr>
+                                @for (cell of row; track $index) {
+                                  <td>{{ cell }}</td>
+                                }
+                                @if (widget.config.tableShowRowTotals) {
+                                  <td class="total-cell">{{ rowTotal(row) }}</td>
+                                }
+                              </tr>
+                            }
+                            @if (widget.config.tableShowColumnTotals) {
+                              <tr class="totals-row">
+                                @for (h of tableHeaders; track $index; let ci = $index) {
+                                  <td>
+                                    @if (ci === 0) { <strong>{{ widget.config.tableColumnTotalLabel || 'Total' }}</strong> }
+                                    @else { {{ columnTotalFromRows(tableRows, ci) }} }
+                                  </td>
+                                }
+                                @if (widget.config.tableShowRowTotals) {
+                                  <td class="total-cell">{{ grandTotalFromRows(tableRows) }}</td>
+                                }
+                              </tr>
+                            }
+                            @if (tableRows.length === 0 && isBoundTable(widget)) {
+                              <tr><td [attr.colspan]="tableHeaders.length || 1" class="ds-no-data">Waiting for data…</td></tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    }
+
+                    <!-- IMAGE WIDGET -->
+                    @if (widget.type === 'image') {
+                      <div class="display-image" [ngStyle]="getImageWrapStyle(widget)">
+                        @if (widget.config.imageUrl) {
+                          <img [src]="widget.config.imageUrl" [ngStyle]="getImageStyle(widget)" alt="" />
+                        } @else {
+                          <div class="widget-empty">🖼️</div>
+                        }
+                      </div>
+                    }
+
+                    <!-- TEMPLATE WIDGET -->
+                    @if (widget.type === 'template') {
+                      <div class="display-template">
+                        @if (renderTemplateHtml(widget); as tplHtml) {
+                          <div class="template-rendered" [innerHTML]="tplHtml"></div>
+                        } @else if (widget.config.templateId) {
+                          <div class="widget-empty">📄 Template not found</div>
+                        } @else {
+                          <div class="widget-empty">📄 Pick a template in the designer</div>
+                        }
+                      </div>
+                    }
+
+                    <!-- NOTICE WIDGET -->
+                    @if (widget.type === 'notice') {
+                      <div class="display-notice-widget">
+                        @if (getNoticeForWidget(widget); as wn) {
+                          <div class="notice-rendered">
+                            <div class="notice-priority-bar" [style.background]="getPriorityColor(wn.priority)"></div>
+                            @if (wn.category) {
+                              <span class="notice-category" [style.color]="wn.category.color">{{ wn.category.name }}</span>
+                            }
+                            <h3 class="notice-title">{{ wn.title }}</h3>
+                            <div class="notice-content" [innerHTML]="wn.content"></div>
+                            @if (wn.media && wn.media.length) {
+                              <div class="notice-media">
+                                @for (m of wn.media; track m.url) {
+                                  @if (m.type === 'image') {
+                                    <img [src]="m.url" [alt]="wn.title" />
+                                  } @else {
+                                    <video [src]="m.url" autoplay muted loop></video>
+                                  }
+                                }
+                              </div>
+                            }
+                          </div>
+                        } @else if (widget.config.noticeId) {
+                          <div class="widget-empty">📌 Notice not found</div>
+                        } @else {
+                          <div class="widget-empty">📌 Pick a notice in the designer</div>
+                        }
+                      </div>
+                    }
+
+                  </div>
+                </div>
+              }
+            </div>
+            </div>
+          }
+          </div>
+
+          <!-- Page Indicators -->
+          @if (board()?.pages && board()!.pages!.length > 1) {
+            <div class="page-indicators">
+              @for (page of board()!.pages!; track page.id; let i = $index) {
+                <button
+                  class="page-indicator"
+                  [class.active]="i === currentPageIndex()"
+                  (click)="goToPage(i)"
+                >
+                  {{ page.name }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+
+        <!-- ========== LEGACY NOTICE MODE ========== -->
+
+        <!-- CAROUSEL MODE -->
+        @if (board()?.displayMode === 'carousel') {
+          <div class="carousel-container" [class]="getTransitionClass()">
+            @if (notices().length > 0) {
+              @for (notice of notices(); track notice._id; let i = $index) {
+                <div
+                  class="carousel-slide"
+                  [class.active]="i === currentIndex()"
+                  [class.prev]="i === (currentIndex() - 1 + notices().length) % notices().length && notices().length > 1"
+                  [class.next]="i === (currentIndex() + 1) % notices().length && notices().length > 1"
+                >
+                  <div class="notice-display-card" [style]="getNoticeCardStyles(notice)">
+                    <div class="notice-priority-bar" [style.background]="getPriorityColor(notice.priority)"></div>
+                    @if (notice.category) {
+                      <span class="notice-category" [style.color]="notice.category.color">{{ notice.category.name }}</span>
+                    }
+                    <h2 class="notice-title">{{ notice.title }}</h2>
+                    <div class="notice-content" [innerHTML]="notice.content"></div>
+                    @if (notice.media.length) {
+                      <div class="notice-media">
+                        @for (m of notice.media; track m.url) {
+                          @if (m.type === 'image') {
+                            <img [src]="m.url" [alt]="notice.title" />
+                          } @else {
+                            <video [src]="m.url" autoplay muted loop></video>
+                          }
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Indicators -->
+              @if (board()?.carousel?.showIndicators && notices().length > 1) {
+                <div class="carousel-indicators">
+                  @for (notice of notices(); track notice._id; let i = $index) {
+                    <button
+                      class="indicator"
+                      [class.active]="i === currentIndex()"
+                      (click)="goToSlide(i)"
+                    ></button>
+                  }
+                </div>
+              }
+
+              <!-- Navigation -->
+              @if (board()?.carousel?.showNavigation && notices().length > 1) {
+                <button class="carousel-nav prev" (click)="prevSlide()">‹</button>
+                <button class="carousel-nav next" (click)="nextSlide()">›</button>
+              }
+            }
+          </div>
+        }
+
+        <!-- GRID MODE -->
+        @if (board()?.displayMode === 'grid') {
+          <div class="grid-container" [ngStyle]="getGridStyles()">
+            @for (notice of notices(); track notice._id) {
+              <div class="notice-display-card grid-card" [ngStyle]="getNoticeCardStyles(notice)">
+                <div class="notice-priority-bar" [style.background]="getPriorityColor(notice.priority)"></div>
+                @if (notice.category) {
+                  <span class="notice-category" [style.color]="notice.category.color">{{ notice.category.name }}</span>
+                }
+                <h3 class="notice-title">{{ notice.title }}</h3>
+                <div class="notice-content" [innerHTML]="notice.content"></div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- LIST MODE -->
+        @if (board()?.displayMode === 'list') {
+          <div class="list-container" #scrollContainer>
+            @for (notice of notices(); track notice._id) {
+              <div class="notice-display-card list-card" [ngStyle]="getNoticeCardStyles(notice)">
+                <div class="notice-priority-bar" [style.background]="getPriorityColor(notice.priority)"></div>
+                <div class="list-card-content">
+                  @if (notice.category) {
+                    <span class="notice-category" [style.color]="notice.category.color">{{ notice.category.name }}</span>
+                  }
+                  <h3 class="notice-title">{{ notice.title }}</h3>
+                  <div class="notice-content" [innerHTML]="notice.content"></div>
+                </div>
+              </div>
+            }
+            <!-- Duplicate for infinite scroll -->
+            @if (board()?.autoScroll?.enabled) {
+              @for (notice of notices(); track notice._id) {
+                <div class="notice-display-card list-card" [ngStyle]="getNoticeCardStyles(notice)">
+                  <div class="notice-priority-bar" [style.background]="getPriorityColor(notice.priority)"></div>
+                  <div class="list-card-content">
+                    <h3 class="notice-title">{{ notice.title }}</h3>
+                    <div class="notice-content" [innerHTML]="notice.content"></div>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        }
+
+        <!-- SINGLE MODE -->
+        @if (board()?.displayMode === 'single') {
+          @if (notices().length > 0) {
+            <div class="single-container">
+              <div class="notice-display-card single-card" [ngStyle]="getNoticeCardStyles(notices()[currentIndex()])">
+                <div class="notice-priority-bar" [style.background]="getPriorityColor(notices()[currentIndex()].priority)"></div>
+                <h1 class="notice-title">{{ notices()[currentIndex()].title }}</h1>
+                <div class="notice-content" [innerHTML]="notices()[currentIndex()].content"></div>
+                @if (notices()[currentIndex()].media.length) {
+                  <div class="notice-media">
+                    @for (m of notices()[currentIndex()].media; track m.url) {
+                      @if (m.type === 'image') {
+                        <img [src]="m.url" [alt]="notices()[currentIndex()].title" />
+                      } @else {
+                        <video [src]="m.url" autoplay muted loop></video>
+                      }
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        }
+
+        <!-- Empty State -->
+        @if (notices().length === 0) {
+          <div class="display-empty">
+            @if (branding().displayScreens.showLogo && branding().logo) {
+              <img class="status-logo" [src]="branding().logo" alt="logo" />
+            } @else {
+              <span>📋</span>
+            }
+            <h2>{{ msgs().emptyTitle }}</h2>
+            <p>{{ msgs().emptySubtitle }}</p>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Fullscreen hint -->
+    <div class="fullscreen-hint">Double-click for fullscreen</div>
+  </div>
+}

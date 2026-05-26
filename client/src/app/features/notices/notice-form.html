@@ -1,0 +1,178 @@
+<div class="page-content animate-fade-in">
+  <div class="page-header">
+    <div>
+      <h1>{{ isEdit ? 'Edit Notice' : 'New Notice' }}</h1>
+      <p class="subtitle">{{ isEdit ? 'Update your notice' : 'Create a new notice for your boards' }}</p>
+    </div>
+    <a routerLink="/notices" class="btn btn-ghost">← Back to Notices</a>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center"><div class="spinner spinner-lg"></div></div>
+  } @else {
+    <div class="form-layout">
+      <!-- Main Content -->
+      <div class="form-main">
+        <div class="card">
+          <div class="form-group">
+            <label for="title">Title</label>
+            <input id="title" type="text" class="form-input" [(ngModel)]="form.title"
+              placeholder="Enter notice title" required />
+          </div>
+
+          <div class="form-group">
+            <label for="content">Content</label>
+            <textarea id="content" class="form-textarea" [(ngModel)]="form.content"
+              placeholder="Write your notice content here..." rows="8"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Tags</label>
+            <div class="tags-input">
+              @for (tag of form.tags; track tag) {
+                <span class="tag">
+                  {{ tag }}
+                  <button class="tag-remove" (click)="removeTag(tag)">×</button>
+                </span>
+              }
+              <input type="text" class="tag-field" [(ngModel)]="tagInput"
+                placeholder="Add tag..." (keyup.enter)="addTag()" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Schedule -->
+        <div class="card">
+          <h3 class="card-title">Schedule</h3>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="startDate">Start Date</label>
+              <input id="startDate" type="datetime-local" class="form-input" [(ngModel)]="form.schedule!.startDate" />
+            </div>
+            <div class="form-group">
+              <label for="endDate">End Date</label>
+              <input id="endDate" type="datetime-local" class="form-input" [(ngModel)]="form.schedule!.endDate" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="recurrence">Recurrence</label>
+            <select id="recurrence" class="form-select" [(ngModel)]="form.schedule!.recurrence">
+              <option value="none">None</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar Settings -->
+      <div class="form-sidebar">
+        <div class="card">
+          <h3 class="card-title">Settings</h3>
+
+          <div class="form-group">
+            <label for="type">Type</label>
+            <select id="type" class="form-select" [(ngModel)]="form.type">
+              <option value="text">Text</option>
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+              <option value="html">HTML</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" class="form-select" [(ngModel)]="form.category">
+              <option [ngValue]="null">No Category</option>
+              @for (cat of categories(); track cat._id) {
+                <option [ngValue]="cat._id">{{ cat.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="priority">Priority</label>
+            <select id="priority" class="form-select" [(ngModel)]="form.priority">
+              <option [ngValue]="1">🔴 Critical</option>
+              <option [ngValue]="2">🟠 High</option>
+              <option [ngValue]="3">🔵 Medium</option>
+              <option [ngValue]="4">🟢 Low</option>
+              <option [ngValue]="5">⚪ Info</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" class="form-select" [(ngModel)]="form.status">
+              <option value="draft">Draft</option>
+              <option value="active">Active</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Display Config</h3>
+
+          <div class="form-group">
+            <label for="size">Size</label>
+            <select id="size" class="form-select" [(ngModel)]="form.displayConfig!.size">
+              <option value="small">Small</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+              <option value="full">Full Width</option>
+            </select>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="cols">Grid Columns</label>
+              <input id="cols" type="number" class="form-input" [(ngModel)]="form.displayConfig!.gridSpan!.cols"
+                min="1" max="6" />
+            </div>
+            <div class="form-group">
+              <label for="rows">Grid Rows</label>
+              <input id="rows" type="number" class="form-input" [(ngModel)]="form.displayConfig!.gridSpan!.rows"
+                min="1" max="4" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="bgColor">Background</label>
+              <input id="bgColor" type="color" class="form-input color-input" [(ngModel)]="form.displayConfig!.bgColor" />
+            </div>
+            <div class="form-group">
+              <label for="textColor">Text Color</label>
+              <input id="textColor" type="color" class="form-input color-input" [(ngModel)]="form.displayConfig!.textColor" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="animation">Animation</label>
+            <select id="animation" class="form-select" [(ngModel)]="form.displayConfig!.animation">
+              <option value="none">None</option>
+              <option value="slide">Slide</option>
+              <option value="fade">Fade</option>
+              <option value="zoom">Zoom</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+          <button class="btn btn-secondary" (click)="save()" [disabled]="saving()">
+            @if (saving()) {
+              <span class="spinner"></span>
+            }
+            Save as Draft
+          </button>
+          <button class="btn btn-primary" (click)="publish()" [disabled]="saving()">
+            {{ isEdit ? 'Update & Publish' : 'Publish Now' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,177 @@
+.help-page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+.help-hero {
+  text-align: center;
+  margin-bottom: 32px;
+  h1 { font-size: 1.8rem; margin: 0 0 6px; }
+  p { color: var(--text-muted); margin: 0 0 18px; }
+}
+
+.help-search {
+  max-width: 480px;
+  margin: 0 auto;
+  display: block;
+}
+
+.help-section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 28px 0 10px;
+}
+
+.help-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.help-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  text-align: left;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text-primary);
+  transition: border-color 0.15s, transform 0.15s, background 0.15s;
+  &:hover {
+    border-color: var(--accent-primary);
+    background: rgba(59, 130, 246, 0.06);
+    transform: translateY(-1px);
+  }
+  .help-card-icon {
+    font-size: 1.8rem;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  div { display: flex; flex-direction: column; min-width: 0; }
+  strong { font-size: 1rem; font-weight: 600; margin-bottom: 2px; }
+  span { font-size: 0.86rem; color: var(--text-muted); line-height: 1.4; }
+}
+
+.help-empty {
+  text-align: center;
+  padding: 32px;
+  color: var(--text-muted);
+}
+
+/* Article view */
+.help-article {
+  position: relative;
+}
+
+.help-back {
+  margin-bottom: 12px;
+}
+
+.help-loading {
+  text-align: center;
+  padding: 48px;
+  color: var(--text-muted);
+}
+
+.help-content {
+  line-height: 1.65;
+  font-size: 1rem;
+
+  h1 { font-size: 2rem; margin: 0 0 8px; }
+  h2 { font-size: 1.5rem; margin: 28px 0 10px; padding-top: 8px; border-top: 1px solid var(--border-color); }
+  h3 { font-size: 1.2rem; margin: 22px 0 8px; color: var(--text-primary); }
+  h4 { font-size: 1.05rem; margin: 18px 0 6px; }
+
+  p { margin: 0 0 12px; }
+
+  a {
+    color: var(--accent-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+    &:hover { text-decoration-thickness: 2px; }
+  }
+  a.help-internal {
+    color: var(--accent-primary);
+    cursor: pointer;
+  }
+
+  ul, ol {
+    padding-left: 24px;
+    margin: 0 0 12px;
+    li { margin: 4px 0; }
+  }
+
+  blockquote {
+    margin: 12px 0;
+    padding: 10px 14px;
+    border-left: 3px solid var(--accent-primary);
+    background: rgba(59, 130, 246, 0.06);
+    border-radius: 0 8px 8px 0;
+    color: var(--text-primary);
+  }
+
+  code {
+    background: var(--bg-input);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.88em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  pre {
+    background: rgba(0, 0, 0, 0.35);
+    padding: 14px 16px;
+    border-radius: 10px;
+    overflow-x: auto;
+    margin: 12px 0;
+    code {
+      background: none;
+      padding: 0;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 0.93rem;
+    background: var(--bg-input);
+    border-radius: 10px;
+    overflow: hidden;
+
+    th, td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color);
+      text-align: left;
+      vertical-align: top;
+    }
+    /* Honour GFM column alignment from `|---:|` / `|:---:|`. */
+    th[align="right"],  td[align="right"]  { text-align: right; }
+    th[align="center"], td[align="center"] { text-align: center; }
+    th[align="left"],   td[align="left"]   { text-align: left; }
+
+    thead th {
+      background: rgba(59, 130, 246, 0.08);
+      font-weight: 700;
+      border-bottom: 2px solid var(--accent-primary);
+    }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid var(--border-color);
+    margin: 24px 0;
+  }
+}

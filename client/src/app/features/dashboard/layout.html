@@ -1,0 +1,63 @@
+<div class="app-shell" [class.sidebar-collapsed]="sidebarCollapsed">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">📋</span>
+        @if (!sidebarCollapsed) {
+          <span class="logo-text">NoticeBoard</span>
+        }
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      @for (item of navItems; track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }"
+          class="nav-item"
+          [attr.data-tooltip]="sidebarCollapsed ? item.label : null"
+        >
+          <span class="nav-icon">{{ item.icon }}</span>
+          @if (!sidebarCollapsed) {
+            <span class="nav-label">{{ item.label }}</span>
+          }
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info" (click)="logout()">
+        <div class="user-avatar">{{ auth.user()?.name?.charAt(0) || 'U' }}</div>
+        @if (!sidebarCollapsed) {
+          <div class="user-details">
+            <span class="user-name">{{ auth.user()?.name }}</span>
+            <span class="user-role">{{ auth.user()?.role | titlecase }}</span>
+          </div>
+          <span class="logout-icon" title="Logout">🚪</span>
+        }
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header class="top-header">
+      <button class="btn btn-ghost btn-icon" (click)="toggleSidebar()">
+        {{ sidebarCollapsed ? '☰' : '✕' }}
+      </button>
+
+      <div class="header-right">
+        <div class="tenant-badge">
+          <span class="tenant-icon">🏢</span>
+          <span class="tenant-name">{{ auth.tenant()?.name }}</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="content-area">
+      <router-outlet />
+    </div>
+  </main>
+</div>

@@ -1,0 +1,58 @@
+<div class="page-content animate-fade-in">
+  <div class="page-header">
+    <div>
+      <h1>Media Library</h1>
+      <p class="subtitle">Upload and manage images and videos</p>
+    </div>
+    <div class="upload-actions">
+      <label class="btn btn-primary upload-btn">
+        @if (uploading()) {
+          <span class="spinner"></span> Uploading...
+        } @else {
+          <span>+</span> Upload File
+        }
+        <input type="file" accept="image/*,video/*" (change)="onFileSelected($event)" hidden [disabled]="uploading()" />
+      </label>
+    </div>
+  </div>
+
+  <div class="filters-bar">
+    <select class="form-select filter-select" [(ngModel)]="filterType" (change)="loadMedia()">
+      <option value="">All Types</option>
+      <option value="image">Images</option>
+      <option value="video">Videos</option>
+    </select>
+    <span class="media-count">{{ mediaList().length }} files</span>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center"><div class="spinner spinner-lg"></div></div>
+  } @else if (mediaList().length === 0) {
+    <div class="empty-state">
+      <div class="icon">🖼️</div>
+      <h3>No media uploaded</h3>
+      <p>Upload images and videos for your notices</p>
+    </div>
+  } @else {
+    <div class="media-grid">
+      @for (media of mediaList(); track media._id) {
+        <div class="media-card">
+          <div class="media-preview">
+            @if (media.type === 'image') {
+              <img [src]="apiBase + media.url" [alt]="media.originalName" loading="lazy" />
+            } @else {
+              <div class="video-thumb">
+                <span>🎬</span>
+              </div>
+            }
+          </div>
+          <div class="media-info">
+            <span class="media-name" [title]="media.originalName">{{ media.originalName }}</span>
+            <span class="media-meta">{{ formatSize(media.size) }} · {{ media.type }}</span>
+          </div>
+          <button class="btn btn-ghost btn-icon delete-btn" (click)="deleteMedia(media._id)">🗑️</button>
+        </div>
+      }
+    </div>
+  }
+</div>
