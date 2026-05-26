@@ -110,7 +110,12 @@
   align-items: center;
   gap: 12px;
 
-  .header-logo { font-size: 1.5rem; }
+  .header-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 8px;
+  }
   .header-title { font-size: 1.25rem; font-weight: 700; }
 }
 

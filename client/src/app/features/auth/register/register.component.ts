@@ -18,7 +18,7 @@ import { AuthService } from '../../../core/services/auth.service';
       <div class="auth-card animate-slide-up">
         <div class="auth-header">
           <div class="logo">
-            <span class="logo-icon">📋</span>
+            <img src="/logo.png" alt="NoticeBoard" class="logo-icon" />
             <span class="logo-text">NoticeBoard</span>
           </div>
           <h1>Get Started</h1>

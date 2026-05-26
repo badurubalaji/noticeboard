@@ -85,7 +85,10 @@
   margin-bottom: 24px;
 
   &-icon {
-    font-size: 2rem;
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    border-radius: 8px;
   }
 
   &-text {

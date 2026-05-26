@@ -32,7 +32,13 @@
     gap: 10px;
     overflow: hidden;
 
-    &-icon { font-size: 1.5rem; flex-shrink: 0; }
+    &-icon {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      object-fit: contain;
+      border-radius: 6px;
+    }
     &-text {
       font-size: 1.15rem;
       font-weight: 800;

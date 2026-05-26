@@ -43,7 +43,11 @@
       <div class="display-header">
         <div class="header-left">
           @if (board()?.theme?.logoVisible) {
-            <span class="header-logo">📋</span>
+            @if (branding().logo) {
+              <img class="header-logo" [src]="branding().logo" alt="logo" />
+            } @else {
+              <img class="header-logo" src="/logo.png" alt="NoticeBoard" />
+            }
           }
           <span class="header-title">{{ board()?.theme?.headerText || board()?.name || 'NoticeBoard' }}</span>
         </div>
