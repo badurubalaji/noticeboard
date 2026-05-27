@@ -252,6 +252,17 @@
             <p class="bg-warn">{{ bgError() }}</p>
           }
 
+          @if (form.theme!.bgType !== 'color') {
+            <h4 class="bg-section-title">Transparency</h4>
+            <div class="form-group">
+              <label>Background opacity: {{ form.theme!.bgOpacity ?? 100 }}%</label>
+              <input type="range" min="0" max="100" step="5"
+                     [ngModel]="form.theme!.bgOpacity ?? 100"
+                     (ngModelChange)="form.theme!.bgOpacity = +$event" />
+              <p class="hint">Lower this to fade the wallpaper/video into the fallback colour — useful when widgets need more focus.</p>
+            </div>
+          }
+
           @if (form.theme!.bgType === 'image' || form.theme!.bgType === 'video') {
             <h4 class="bg-section-title">Overlay (helps text stay readable)</h4>
             <div class="grid-2">
@@ -276,7 +287,10 @@
         <div class="bg-preview" [ngStyle]="bgPreviewStyles()">
           @if (form.theme!.bgType === 'video' && form.theme!.bgVideo) {
             <video class="bg-preview-video" [src]="form.theme!.bgVideo" autoplay muted loop playsinline
-                   [style.object-fit]="form.theme!.bgFit || 'cover'"></video>
+                   [style.object-fit]="form.theme!.bgFit || 'cover'"
+                   [ngStyle]="bgPreviewVideoStyles()"></video>
+          } @else if (form.theme!.bgType === 'image' || form.theme!.bgType === 'gradient') {
+            <div class="bg-preview-layer" [ngStyle]="bgPreviewLayerStyles()"></div>
           }
           <div class="bg-preview-overlay" [ngStyle]="bgOverlayStyles()"></div>
           <div class="bg-preview-content">

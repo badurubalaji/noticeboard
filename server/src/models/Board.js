@@ -53,7 +53,8 @@ const boardSchema = new mongoose.Schema({
     bgVideo:        { type: String, default: '' },           // MP4/WebM URL — autoplays muted, looped
     bgGradient:     { type: String, default: '' },           // any valid CSS gradient value
     bgFit:          { type: String, enum: ['cover', 'contain', 'fill'], default: 'cover' },
-    bgOverlay:      { type: Number, default: 0, min: 0, max: 100 }, // % opacity of the overlay layer
+    bgOpacity:      { type: Number, default: 100, min: 0, max: 100 },  // % opacity of the background itself
+    bgOverlay:      { type: Number, default: 0, min: 0, max: 100 },    // % opacity of the overlay layer on top
     bgOverlayColor: { type: String, default: '#000000' },
     // Header / chrome
     headerVisible: { type: Boolean, default: true },
@@ -80,7 +81,7 @@ const boardSchema = new mongoose.Schema({
     order: { type: Number, default: 0 },
     widgets: [{
       id: { type: String, required: true },
-      type: { type: String, enum: ['chart', 'table', 'image', 'template', 'notice'], required: true },
+      type: { type: String, enum: ['chart', 'table', 'image', 'template', 'notice', 'section'], required: true },
       title: { type: String, default: '' },
       gridCol: { type: Number, default: 1, min: 1 },
       gridRow: { type: Number, default: 1, min: 1 },
@@ -124,6 +125,16 @@ const boardSchema = new mongoose.Schema({
         dataSourceValueKey: { type: String, default: '' },
         // Text widget: simple template like "{{count}} active"
         dataSourceTextTemplate: { type: String, default: '' },
+        // ---- Section widget (heading / divider) ----
+        sectionTitle:     { type: String, default: '' },
+        sectionSubtitle:  { type: String, default: '' },
+        sectionIcon:      { type: String, default: '' },   // emoji or short text
+        sectionCategoryId:{ type: String, default: '' },   // optional link to a Category
+        sectionAlign:     { type: String, enum: ['left', 'center', 'right'], default: 'left' },
+        sectionSize:      { type: String, enum: ['small', 'medium', 'large'], default: 'medium' },
+        sectionStyle:     { type: String, enum: ['filled', 'outlined', 'underlined', 'plain'], default: 'filled' },
+        sectionTextColor: { type: String, default: '' },   // empty = use theme default
+        sectionBgColor:   { type: String, default: '' },
       },
       style: {
         bgColor: { type: String, default: '' },

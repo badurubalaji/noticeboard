@@ -201,6 +201,16 @@ export interface WidgetConfig {
   dataSourceLabelKey?: string;
   dataSourceValueKey?: string;
   dataSourceTextTemplate?: string;
+  // Section widget
+  sectionTitle?: string;
+  sectionSubtitle?: string;
+  sectionIcon?: string;
+  sectionCategoryId?: string;
+  sectionAlign?: 'left' | 'center' | 'right';
+  sectionSize?: 'small' | 'medium' | 'large';
+  sectionStyle?: 'filled' | 'outlined' | 'underlined' | 'plain';
+  sectionTextColor?: string;
+  sectionBgColor?: string;
 }
 
 export interface DataSource {
@@ -243,7 +253,7 @@ export interface DataSourceLite {
 
 export interface BoardWidget {
   id: string;
-  type: 'chart' | 'table' | 'image' | 'template' | 'notice';
+  type: 'chart' | 'table' | 'image' | 'template' | 'notice' | 'section';
   title: string;
   gridCol: number;
   gridRow: number;
@@ -303,6 +313,7 @@ export interface Board {
     bgVideo?: string;
     bgGradient: string;
     bgFit?: 'cover' | 'contain' | 'fill';
+    bgOpacity?: number;
     bgOverlay?: number;
     bgOverlayColor?: string;
     headerVisible: boolean;

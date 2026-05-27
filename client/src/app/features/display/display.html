@@ -48,12 +48,17 @@
     (mouseenter)="onMouseEnter()"
     (mouseleave)="onMouseLeave()"
   >
+    <!-- Background layer (image / gradient). Video has its own element below. -->
+    @if (board()?.theme?.bgType === 'image' || board()?.theme?.bgType === 'gradient') {
+      <div class="display-bg-layer" [ngStyle]="bgLayerStyles()"></div>
+    }
     <!-- Background video layer (sits behind everything) -->
     @if (board()?.theme?.bgType === 'video' && board()?.theme?.bgVideo) {
       <video class="display-bg-video"
              [src]="board()?.theme?.bgVideo"
              autoplay muted loop playsinline
-             [style.object-fit]="board()?.theme?.bgFit || 'cover'"></video>
+             [style.object-fit]="board()?.theme?.bgFit || 'cover'"
+             [ngStyle]="bgVideoStyles()"></video>
     }
     <!-- Optional darkening overlay for readability -->
     @if ((board()?.theme?.bgOverlay || 0) > 0) {
@@ -261,6 +266,34 @@
                         } @else {
                           <div class="widget-empty">📌 Pick a notice in the designer</div>
                         }
+                      </div>
+                    }
+
+                    <!-- SECTION WIDGET -->
+                    @if (widget.type === 'section') {
+                      <div class="display-section"
+                           [class.section-filled]="(widget.config.sectionStyle || 'filled') === 'filled'"
+                           [class.section-outlined]="widget.config.sectionStyle === 'outlined'"
+                           [class.section-underlined]="widget.config.sectionStyle === 'underlined'"
+                           [class.section-plain]="widget.config.sectionStyle === 'plain'"
+                           [class.section-small]="widget.config.sectionSize === 'small'"
+                           [class.section-large]="widget.config.sectionSize === 'large'"
+                           [style.text-align]="widget.config.sectionAlign || 'left'"
+                           [style.justify-content]="sectionJustify(widget.config.sectionAlign)"
+                           [style.color]="resolveSectionTextColor(widget)"
+                           [style.background-color]="resolveSectionBgColor(widget)"
+                           [style.border-color]="resolveSectionTextColor(widget)">
+                        <div class="section-row" [style.justify-content]="sectionJustify(widget.config.sectionAlign)">
+                          @if (widget.config.sectionIcon) {
+                            <span class="section-icon">{{ widget.config.sectionIcon }}</span>
+                          }
+                          <div class="section-titles">
+                            <h3 class="section-title">{{ widget.config.sectionTitle || 'Section' }}</h3>
+                            @if (widget.config.sectionSubtitle) {
+                              <p class="section-subtitle">{{ widget.config.sectionSubtitle }}</p>
+                            }
+                          </div>
+                        </div>
                       </div>
                     }
 

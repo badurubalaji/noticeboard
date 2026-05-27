@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../../core/services/api.service';
-import { Board, BoardPage, BoardWidget, WidgetConfig, Template, Media, DataSource, Notice } from '../../../core/models/interfaces';
+import { Board, BoardPage, BoardWidget, WidgetConfig, Template, Media, DataSource, Notice, Category } from '../../../core/models/interfaces';
 
 @Component({
   selector: 'app-board-designer',
@@ -25,6 +25,7 @@ export class BoardDesignerComponent implements OnInit, OnDestroy {
 
   // Widget palette
   widgetTypes: { type: BoardWidget['type']; label: string; icon: string }[] = [
+    { type: 'section', label: 'Section', icon: '🏷️' },
     { type: 'chart', label: 'Chart', icon: '📊' },
     { type: 'table', label: 'Table', icon: '📋' },
     { type: 'image', label: 'Image', icon: '🖼️' },
@@ -41,6 +42,7 @@ export class BoardDesignerComponent implements OnInit, OnDestroy {
   mediaList = signal<Media[]>([]);
   dataSources = signal<DataSource[]>([]);
   noticesList = signal<Notice[]>([]);
+  categories = signal<Category[]>([]);
 
   // Drag state
   dragWidgetType: BoardWidget['type'] | null = null;
@@ -85,6 +87,10 @@ export class BoardDesignerComponent implements OnInit, OnDestroy {
     this.api.getNotices({ limit: '100' }).subscribe({
       next: (res) => this.noticesList.set(res.notices || []),
       error: () => this.noticesList.set([]),
+    });
+    this.api.getCategories().subscribe({
+      next: (cats) => this.categories.set(cats),
+      error: () => this.categories.set([]),
     });
   }
 
@@ -292,6 +298,16 @@ export class BoardDesignerComponent implements OnInit, OnDestroy {
       image: { imageUrl: '', imageFit: 'cover' },
       template: { templateId: '' },
       notice: { noticeId: '' },
+      section: {
+        sectionTitle: 'Section title',
+        sectionSubtitle: '',
+        sectionIcon: '',
+        sectionAlign: 'left',
+        sectionSize: 'medium',
+        sectionStyle: 'filled',
+        sectionTextColor: '',
+        sectionBgColor: '',
+      },
     };
 
     return {

@@ -101,6 +101,14 @@
   user-select: none;
 }
 
+/* Background image / gradient layer — sits behind everything */
+.display-bg-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
 /* Background video — fills the whole viewport, behind everything */
 .display-bg-video {
   position: absolute;
@@ -443,6 +451,66 @@
     border-radius: inherit;
     max-width: 100%;
     max-height: 100%;
+  }
+}
+
+/* ----- Section widget (heading / divider) ----- */
+.display-section {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  box-sizing: border-box;
+
+  .section-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+  }
+  .section-icon {
+    font-size: 1.6em;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .section-titles { min-width: 0; }
+  .section-title {
+    margin: 0;
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: -0.01em;
+  }
+  .section-subtitle {
+    margin: 4px 0 0;
+    font-weight: 500;
+    opacity: 0.7;
+    font-size: 0.9rem;
+  }
+
+  &.section-small  .section-title { font-size: 1.05rem; }
+  &.section-large  .section-title { font-size: 2rem; }
+  &.section-small  .section-subtitle { font-size: 0.8rem; }
+  &.section-large  .section-subtitle { font-size: 1.05rem; }
+
+  &.section-filled    { background: rgba(59, 130, 246, 0.18); }
+  &.section-outlined  {
+    background: transparent;
+    border: 2px solid currentColor;
+  }
+  &.section-underlined {
+    background: transparent;
+    border-radius: 0;
+    border-bottom: 3px solid currentColor;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  &.section-plain {
+    background: transparent;
+    padding: 6px 0;
   }
 }
 

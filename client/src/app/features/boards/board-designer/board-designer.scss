@@ -705,6 +705,32 @@
   margin: 4px 0;
 }
 
+/* ===== Section widget (designer preview) =====
+   Same look as the kiosk render — see display.scss .display-section. */
+.section-preview {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  line-height: 1.2;
+  &.section-small  h3 { font-size: 0.95rem; }
+  &.section-medium h3 { font-size: 1.15rem; }
+  &.section-large  h3 { font-size: 1.5rem; }
+  h3 { margin: 0; font-weight: 700; }
+  p  { margin: 2px 0 0; opacity: 0.7; font-size: 0.78rem; font-weight: 500; }
+  .section-row { display: flex; align-items: center; gap: 10px; width: 100%;
+    justify-content: inherit;
+  }
+  .section-icon { font-size: 1.3em; line-height: 1; flex-shrink: 0; }
+  .section-titles { flex: 1; min-width: 0; }
+  &.section-filled    { background: rgba(59, 130, 246, 0.18); }
+  &.section-outlined  { background: transparent; border: 2px solid currentColor; }
+  &.section-underlined{ background: transparent; border-bottom: 2px solid currentColor; border-radius: 0; padding-left: 0; padding-right: 0; }
+  &.section-plain     { background: transparent; padding: 4px 0; }
+}
+
 .image-dropzone {
   display: flex;
   align-items: center;

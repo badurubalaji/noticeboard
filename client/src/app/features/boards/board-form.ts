@@ -34,6 +34,7 @@ export class BoardFormComponent implements OnInit {
       bgVideo: '',
       bgGradient: '',
       bgFit: 'cover',
+      bgOpacity: 100,
       bgOverlay: 0,
       bgOverlayColor: '#000000',
       headerVisible: true, headerText: '',
@@ -132,30 +133,48 @@ export class BoardFormComponent implements OnInit {
     this.bgError.set('');
   }
 
-  /** CSS for the preview tile — same logic the kiosk will use. */
+  /** Wrapper just sets the fallback colour — bg image/video/gradient
+   *  goes on a separate layer with opacity. */
   bgPreviewStyles(): Record<string, string> {
     const t = this.form.theme;
-    if (!t) return {};
-    const styles: Record<string, string> = { position: 'relative', overflow: 'hidden' };
+    return {
+      'background-color': t?.bgColor || '#0F172A',
+      position: 'relative',
+      overflow: 'hidden',
+    };
+  }
+
+  /** The actual visual layer that the opacity slider fades. */
+  bgPreviewLayerStyles(): Record<string, string> {
+    const t = this.form.theme;
+    if (!t) return { display: 'none' };
+    const styles: Record<string, string> = {
+      position: 'absolute',
+      inset: '0',
+      'pointer-events': 'none',
+      opacity: String((t.bgOpacity ?? 100) / 100),
+    };
     switch (t.bgType) {
       case 'image':
         styles['background-image'] = `url("${t.bgImage}")`;
         styles['background-size'] = t.bgFit || 'cover';
         styles['background-position'] = 'center';
         styles['background-repeat'] = 'no-repeat';
-        styles['background-color'] = t.bgColor || '#0F172A';
         break;
       case 'gradient':
         styles['background'] = t.bgGradient || `linear-gradient(135deg, ${t.bgColor} 0%, #1E40AF 100%)`;
         break;
       case 'video':
-        styles['background-color'] = t.bgColor || '#0F172A';
-        break;
       case 'color':
       default:
-        styles['background-color'] = t.bgColor || '#0F172A';
+        // Video has its own <video> element; color uses the wrapper colour.
+        return { display: 'none' };
     }
     return styles;
+  }
+
+  bgPreviewVideoStyles(): Record<string, string> {
+    return { opacity: String((this.form.theme?.bgOpacity ?? 100) / 100) };
   }
 
   bgOverlayStyles(): Record<string, string> {

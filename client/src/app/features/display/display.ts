@@ -189,30 +189,76 @@ export class DisplayComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** Backdrop CSS for the kiosk display, driven by board.theme.bg*. */
+  /**
+   * Outer board wrapper styles — just the fallback colour. The actual
+   * background (image / gradient / video) renders on a separate layer
+   * below so the opacity slider only affects the background, never the
+   * widgets/content on top.
+   */
   boardBgStyles(): Record<string, string> {
     const t = this.board()?.theme;
-    if (!t) return { 'background-color': '#0F172A' };
-    switch (t.bgType) {
-      case 'image':
-        return {
-          'background-image': t.bgImage ? `url("${t.bgImage}")` : 'none',
-          'background-size': t.bgFit || 'cover',
-          'background-position': 'center',
-          'background-repeat': 'no-repeat',
-          'background-color': t.bgColor || '#0F172A',
-        };
-      case 'gradient':
-        return {
-          'background': t.bgGradient || `linear-gradient(135deg, ${t.bgColor || '#0F172A'} 0%, #1E40AF 100%)`,
-        };
-      case 'video':
-        // Plain colour while the video loads / for letterboxing.
-        return { 'background-color': t.bgColor || '#0F172A' };
-      case 'color':
-      default:
-        return { 'background-color': t.bgColor || '#0F172A' };
+    return { 'background-color': t?.bgColor || '#0F172A' };
+  }
+
+  /** Visual background layer (image or gradient) — image and gradient
+   *  branches; video gets its own <video> element. */
+  bgLayerStyles(): Record<string, string> {
+    const t = this.board()?.theme;
+    if (!t) return { display: 'none' };
+    const opacity = String((t.bgOpacity ?? 100) / 100);
+    if (t.bgType === 'image' && t.bgImage) {
+      return {
+        'background-image': `url("${t.bgImage}")`,
+        'background-size': t.bgFit || 'cover',
+        'background-position': 'center',
+        'background-repeat': 'no-repeat',
+        opacity,
+      };
     }
+    if (t.bgType === 'gradient') {
+      return {
+        background: t.bgGradient || `linear-gradient(135deg, ${t.bgColor || '#0F172A'} 0%, #1E40AF 100%)`,
+        opacity,
+      };
+    }
+    return { display: 'none' };
+  }
+
+  bgVideoStyles(): Record<string, string> {
+    const t = this.board()?.theme;
+    return { opacity: String((t?.bgOpacity ?? 100) / 100) };
+  }
+
+  // ===== SECTION WIDGET =====
+  sectionJustify(align: string | undefined): string {
+    if (align === 'center') return 'center';
+    if (align === 'right')  return 'flex-end';
+    return 'flex-start';
+  }
+
+  resolveSectionTextColor(widget: BoardWidget): string | null {
+    const c = widget.config?.sectionTextColor;
+    if (c) return c;
+    // If a category is linked, use its colour; otherwise default text colour.
+    const catId = widget.config?.sectionCategoryId;
+    if (catId) {
+      // The kiosk doesn't have the full Category list; tenant's primary
+      // colour is the next-best default.
+      return this.branding().primaryColor || null;
+    }
+    return null;
+  }
+
+  resolveSectionBgColor(widget: BoardWidget): string | null {
+    const c = widget.config?.sectionBgColor;
+    if (c) return c;
+    if ((widget.config?.sectionStyle || 'filled') !== 'filled') return null;
+    const catId = widget.config?.sectionCategoryId;
+    if (catId) {
+      const primary = this.branding().primaryColor || '#3B82F6';
+      return primary + '22'; // ~13% alpha
+    }
+    return null;
   }
 
   brandStyles(): Record<string, string> {

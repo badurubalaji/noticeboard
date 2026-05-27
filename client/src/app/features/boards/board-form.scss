@@ -171,6 +171,11 @@
   width: 100%;
   height: 100%;
 }
+.bg-preview-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
 .bg-preview-overlay {
   /* set inline via [ngStyle] — keep this rule minimal */
   z-index: 1;

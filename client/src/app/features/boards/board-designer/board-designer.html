@@ -255,6 +255,33 @@
                       }
                     </div>
                   }
+
+                  <!-- SECTION PREVIEW -->
+                  @if (widget.type === 'section') {
+                    <div class="section-preview"
+                         [class.section-filled]="(widget.config.sectionStyle || 'filled') === 'filled'"
+                         [class.section-outlined]="widget.config.sectionStyle === 'outlined'"
+                         [class.section-underlined]="widget.config.sectionStyle === 'underlined'"
+                         [class.section-plain]="widget.config.sectionStyle === 'plain'"
+                         [class.section-small]="widget.config.sectionSize === 'small'"
+                         [class.section-large]="widget.config.sectionSize === 'large'"
+                         [style.text-align]="widget.config.sectionAlign || 'left'"
+                         [style.color]="widget.config.sectionTextColor || null"
+                         [style.background-color]="widget.config.sectionBgColor || null"
+                         [style.border-color]="widget.config.sectionTextColor || null">
+                      <div class="section-row">
+                        @if (widget.config.sectionIcon) {
+                          <span class="section-icon">{{ widget.config.sectionIcon }}</span>
+                        }
+                        <div class="section-titles">
+                          <h3>{{ widget.config.sectionTitle || 'Section title' }}</h3>
+                          @if (widget.config.sectionSubtitle) {
+                            <p>{{ widget.config.sectionSubtitle }}</p>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
                 </div>
 
                 <!-- Resize handles -->
@@ -531,6 +558,105 @@
                          placeholder="transparent" />
                 </div>
                 <p class="prop-hint">Useful when “Fit inside” leaves empty space.</p>
+              </div>
+            </div>
+          }
+
+          @if (selectedWidget()!.type === 'section') {
+            <div class="prop-section">
+              <h4 class="prop-section-title">Section</h4>
+              <p class="prop-hint">A heading that groups other widgets on this page.</p>
+              <div class="prop-group">
+                <label>Title</label>
+                <input type="text" class="prop-input"
+                       [ngModel]="selectedWidget()!.config.sectionTitle"
+                       (ngModelChange)="updateWidgetProp('config.sectionTitle', $event)"
+                       placeholder="e.g. Today's production" />
+              </div>
+              <div class="prop-group">
+                <label>Subtitle (optional)</label>
+                <input type="text" class="prop-input"
+                       [ngModel]="selectedWidget()!.config.sectionSubtitle"
+                       (ngModelChange)="updateWidgetProp('config.sectionSubtitle', $event)"
+                       placeholder="Smaller line below the title" />
+              </div>
+              <div class="prop-group">
+                <label>Icon (emoji)</label>
+                <input type="text" class="prop-input"
+                       [ngModel]="selectedWidget()!.config.sectionIcon"
+                       (ngModelChange)="updateWidgetProp('config.sectionIcon', $event)"
+                       placeholder="e.g. 🏭 or ⚠️ — paste any emoji" />
+              </div>
+              <div class="prop-group">
+                <label>Category (optional)</label>
+                <select class="prop-input"
+                        [ngModel]="selectedWidget()!.config.sectionCategoryId || ''"
+                        (ngModelChange)="updateWidgetProp('config.sectionCategoryId', $event)">
+                  <option value="">— None —</option>
+                  @for (c of categories(); track c._id) {
+                    <option [value]="c._id">{{ c.icon || '•' }} {{ c.name }}</option>
+                  }
+                </select>
+                <p class="prop-hint">If set, picks up the category's colour automatically.</p>
+              </div>
+            </div>
+            <div class="prop-section">
+              <h4 class="prop-section-title">Look &amp; feel</h4>
+              <div class="prop-group">
+                <label>Style</label>
+                <select class="prop-input"
+                        [ngModel]="selectedWidget()!.config.sectionStyle || 'filled'"
+                        (ngModelChange)="updateWidgetProp('config.sectionStyle', $event)">
+                  <option value="filled">Filled (coloured background)</option>
+                  <option value="outlined">Outlined (border, transparent fill)</option>
+                  <option value="underlined">Underlined (line below)</option>
+                  <option value="plain">Plain (just text)</option>
+                </select>
+              </div>
+              <div class="prop-group">
+                <label>Size</label>
+                <select class="prop-input"
+                        [ngModel]="selectedWidget()!.config.sectionSize || 'medium'"
+                        (ngModelChange)="updateWidgetProp('config.sectionSize', $event)">
+                  <option value="small">Small</option>
+                  <option value="medium">Medium</option>
+                  <option value="large">Large</option>
+                </select>
+              </div>
+              <div class="prop-group">
+                <label>Alignment</label>
+                <select class="prop-input"
+                        [ngModel]="selectedWidget()!.config.sectionAlign || 'left'"
+                        (ngModelChange)="updateWidgetProp('config.sectionAlign', $event)">
+                  <option value="left">Left</option>
+                  <option value="center">Center</option>
+                  <option value="right">Right</option>
+                </select>
+              </div>
+              <div class="prop-group">
+                <label>Text colour</label>
+                <div class="color-picker">
+                  <input type="color"
+                         [ngModel]="selectedWidget()!.config.sectionTextColor || '#f1f5f9'"
+                         (ngModelChange)="updateWidgetProp('config.sectionTextColor', $event)" />
+                  <input type="text" class="prop-input"
+                         [ngModel]="selectedWidget()!.config.sectionTextColor || ''"
+                         (ngModelChange)="updateWidgetProp('config.sectionTextColor', $event)"
+                         placeholder="auto" />
+                </div>
+              </div>
+              <div class="prop-group">
+                <label>Background colour</label>
+                <div class="color-picker">
+                  <input type="color"
+                         [ngModel]="selectedWidget()!.config.sectionBgColor || '#3b82f6'"
+                         (ngModelChange)="updateWidgetProp('config.sectionBgColor', $event)" />
+                  <input type="text" class="prop-input"
+                         [ngModel]="selectedWidget()!.config.sectionBgColor || ''"
+                         (ngModelChange)="updateWidgetProp('config.sectionBgColor', $event)"
+                         placeholder="auto" />
+                </div>
+                <p class="prop-hint">Only applies to the "Filled" style above.</p>
               </div>
             </div>
           }
