@@ -121,14 +121,175 @@
         </div>
       </div>
 
+      <!-- Background -->
+      <div class="card">
+        <h3 class="section-title">Background</h3>
+        <p class="hint">Pick what fills the screen behind your widgets and notices.</p>
+
+        <div class="bg-type-switch">
+          <button type="button" class="bg-type-btn"
+                  [class.active]="(form.theme!.bgType || 'color') === 'color'"
+                  (click)="setBgType('color')">
+            🎨 Solid colour
+            <span>Plain background — most readable.</span>
+          </button>
+          <button type="button" class="bg-type-btn"
+                  [class.active]="form.theme!.bgType === 'image'"
+                  (click)="setBgType('image')">
+            🖼️ Image / wallpaper
+            <span>PNG, JPG, WebP or GIF.</span>
+          </button>
+          <button type="button" class="bg-type-btn"
+                  [class.active]="form.theme!.bgType === 'video'"
+                  (click)="setBgType('video')">
+            🎬 Video
+            <span>MP4 / WebM — loops silently.</span>
+          </button>
+          <button type="button" class="bg-type-btn"
+                  [class.active]="form.theme!.bgType === 'gradient'"
+                  (click)="setBgType('gradient')">
+            🌈 Gradient
+            <span>Custom CSS gradient.</span>
+          </button>
+        </div>
+
+        <div class="bg-editor">
+          @if ((form.theme!.bgType || 'color') === 'color') {
+            <div class="form-group">
+              <label>Background colour</label>
+              <div class="color-picker">
+                <input type="color" [(ngModel)]="form.theme!.bgColor" />
+                <input type="text" class="form-input" [(ngModel)]="form.theme!.bgColor" />
+              </div>
+            </div>
+          }
+
+          @if (form.theme!.bgType === 'image') {
+            <div class="form-group">
+              <label>Upload image</label>
+              <label class="bg-drop" [class.uploading]="uploadingBg()">
+                @if (uploadingBg()) {
+                  <span class="spinner"></span><strong>Uploading…</strong>
+                } @else if (form.theme!.bgImage) {
+                  <img class="bg-drop-thumb" [src]="form.theme!.bgImage" alt="" />
+                  <div><strong>Click to replace</strong><span>or drop a new image</span></div>
+                } @else {
+                  <span class="bg-drop-icon">📤</span>
+                  <div><strong>Click to upload</strong><span>PNG, JPG, WebP, or GIF</span></div>
+                }
+                <input type="file" accept="image/*" hidden (change)="onBgFileSelected($event, 'image')" />
+              </label>
+              @if (form.theme!.bgImage) {
+                <button type="button" class="btn btn-ghost btn-sm" style="margin-top:6px;" (click)="clearBgImage()">Remove image</button>
+              }
+            </div>
+            <div class="form-group">
+              <label>Or paste an image URL</label>
+              <input type="text" class="form-input" [(ngModel)]="form.theme!.bgImage" placeholder="https://..." />
+            </div>
+            <div class="form-group">
+              <label>Image fit</label>
+              <select class="form-select" [(ngModel)]="form.theme!.bgFit">
+                <option value="cover">Cover (fill screen, may crop)</option>
+                <option value="contain">Contain (show whole image, may bar)</option>
+                <option value="fill">Stretch (may distort)</option>
+              </select>
+            </div>
+          }
+
+          @if (form.theme!.bgType === 'video') {
+            <div class="form-group">
+              <label>Upload video</label>
+              <label class="bg-drop" [class.uploading]="uploadingBg()">
+                @if (uploadingBg()) {
+                  <span class="spinner"></span><strong>Uploading…</strong>
+                } @else if (form.theme!.bgVideo) {
+                  <span class="bg-drop-icon">🎬</span>
+                  <div><strong>Video set</strong><span>Click to replace</span></div>
+                } @else {
+                  <span class="bg-drop-icon">📤</span>
+                  <div><strong>Click to upload</strong><span>MP4 or WebM. Plays silently, on loop.</span></div>
+                }
+                <input type="file" accept="video/mp4,video/webm" hidden (change)="onBgFileSelected($event, 'video')" />
+              </label>
+              <p class="hint">For best results on TVs: 1080p or smaller, under 20 MB, 10–30 second loop.</p>
+              @if (form.theme!.bgVideo) {
+                <button type="button" class="btn btn-ghost btn-sm" style="margin-top:6px;" (click)="clearBgVideo()">Remove video</button>
+              }
+            </div>
+            <div class="form-group">
+              <label>Or paste a video URL</label>
+              <input type="text" class="form-input" [(ngModel)]="form.theme!.bgVideo" placeholder="https://..." />
+            </div>
+            <div class="form-group">
+              <label>Video fit</label>
+              <select class="form-select" [(ngModel)]="form.theme!.bgFit">
+                <option value="cover">Cover (fill screen, may crop)</option>
+                <option value="contain">Contain (show whole video, may bar)</option>
+                <option value="fill">Stretch (may distort)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Fallback colour (shown while loading)</label>
+              <div class="color-picker">
+                <input type="color" [(ngModel)]="form.theme!.bgColor" />
+                <input type="text" class="form-input" [(ngModel)]="form.theme!.bgColor" />
+              </div>
+            </div>
+          }
+
+          @if (form.theme!.bgType === 'gradient') {
+            <div class="form-group">
+              <label>CSS gradient</label>
+              <input type="text" class="form-input" [(ngModel)]="form.theme!.bgGradient"
+                placeholder="linear-gradient(135deg, #3B82F6, #1E40AF)" />
+              <p class="hint">Paste any valid CSS <code>background</code> value — for example
+                <code>linear-gradient(135deg, #3B82F6, #1E40AF)</code>.</p>
+            </div>
+          }
+
+          @if (bgError()) {
+            <p class="bg-warn">{{ bgError() }}</p>
+          }
+
+          @if (form.theme!.bgType === 'image' || form.theme!.bgType === 'video') {
+            <h4 class="bg-section-title">Overlay (helps text stay readable)</h4>
+            <div class="grid-2">
+              <div class="form-group">
+                <label>Darkness: {{ form.theme!.bgOverlay || 0 }}%</label>
+                <input type="range" min="0" max="100" step="5"
+                       [ngModel]="form.theme!.bgOverlay || 0"
+                       (ngModelChange)="form.theme!.bgOverlay = +$event" />
+              </div>
+              <div class="form-group">
+                <label>Overlay colour</label>
+                <div class="color-picker">
+                  <input type="color" [(ngModel)]="form.theme!.bgOverlayColor" />
+                  <input type="text" class="form-input" [(ngModel)]="form.theme!.bgOverlayColor" />
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <h4 class="bg-section-title">Live preview</h4>
+        <div class="bg-preview" [ngStyle]="bgPreviewStyles()">
+          @if (form.theme!.bgType === 'video' && form.theme!.bgVideo) {
+            <video class="bg-preview-video" [src]="form.theme!.bgVideo" autoplay muted loop playsinline
+                   [style.object-fit]="form.theme!.bgFit || 'cover'"></video>
+          }
+          <div class="bg-preview-overlay" [ngStyle]="bgOverlayStyles()"></div>
+          <div class="bg-preview-content">
+            <h2>Sample notice title</h2>
+            <p>This is how your notices and widgets will look on top of the background. Adjust overlay if text is hard to read.</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Theme -->
       <div class="card">
-        <h3 class="section-title">Theme & Appearance</h3>
+        <h3 class="section-title">Header & typography</h3>
         <div class="grid-2">
-          <div class="form-group">
-            <label>Background Color</label>
-            <input type="color" class="form-input color-input" [(ngModel)]="form.theme!.bgColor" />
-          </div>
           <div class="form-group">
             <label>Font Size</label>
             <select class="form-select" [(ngModel)]="form.theme!.fontSize">

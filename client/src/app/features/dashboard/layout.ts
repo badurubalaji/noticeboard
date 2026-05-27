@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
@@ -22,6 +22,8 @@ export class LayoutComponent {
     { path: '/settings', icon: '⚙️', label: 'Settings' },
     { path: '/help', icon: '💡', label: 'Help' },
   ];
+
+  brandStyle = computed(() => this.auth.tenant()?.branding?.brandStyle || 'logo+text');
 
   constructor(public auth: AuthService, private router: Router) {}
 

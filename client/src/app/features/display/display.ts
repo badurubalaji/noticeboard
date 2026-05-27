@@ -16,6 +16,7 @@ const DEFAULT_BRANDING: DisplayBranding = {
   accentColor: '#F59E0B',
   fontFamily: 'Inter',
   darkMode: true,
+  brandStyle: 'logo+text',
   displayScreens: {
     showLogo: true,
     loadingTitle: 'Loading board…',
@@ -49,6 +50,7 @@ export class DisplayComponent implements OnInit, OnDestroy {
   error = signal('');
   branding = signal<DisplayBranding>(DEFAULT_BRANDING);
   msgs = computed(() => this.branding().displayScreens);
+  brandStyle = computed(() => this.branding().brandStyle || 'logo+text');
 
   // Carousel state (for notices)
   currentIndex = signal(0);
@@ -185,6 +187,32 @@ export class DisplayComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       },
     });
+  }
+
+  /** Backdrop CSS for the kiosk display, driven by board.theme.bg*. */
+  boardBgStyles(): Record<string, string> {
+    const t = this.board()?.theme;
+    if (!t) return { 'background-color': '#0F172A' };
+    switch (t.bgType) {
+      case 'image':
+        return {
+          'background-image': t.bgImage ? `url("${t.bgImage}")` : 'none',
+          'background-size': t.bgFit || 'cover',
+          'background-position': 'center',
+          'background-repeat': 'no-repeat',
+          'background-color': t.bgColor || '#0F172A',
+        };
+      case 'gradient':
+        return {
+          'background': t.bgGradient || `linear-gradient(135deg, ${t.bgColor || '#0F172A'} 0%, #1E40AF 100%)`,
+        };
+      case 'video':
+        // Plain colour while the video loads / for letterboxing.
+        return { 'background-color': t.bgColor || '#0F172A' };
+      case 'color':
+      default:
+        return { 'background-color': t.bgColor || '#0F172A' };
+    }
   }
 
   brandStyles(): Record<string, string> {

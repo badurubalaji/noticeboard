@@ -3,9 +3,15 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="logo">
-        <img src="/logo.png" alt="NoticeBoard" class="logo-icon" />
-        @if (!sidebarCollapsed) {
-          <span class="logo-text">NoticeBoard</span>
+        @if (brandStyle() !== 'text-only') {
+          @if (auth.tenant()?.branding?.logo) {
+            <img [src]="auth.tenant()!.branding.logo" alt="" class="logo-icon" />
+          } @else {
+            <img src="/logo.png" alt="" class="logo-icon" />
+          }
+        }
+        @if (!sidebarCollapsed && brandStyle() !== 'logo-only') {
+          <span class="logo-text">{{ auth.tenant()?.name || 'NoticeBoard' }}</span>
         }
       </div>
     </div>
@@ -50,8 +56,16 @@
 
       <div class="header-right">
         <div class="tenant-badge">
-          <span class="tenant-icon">🏢</span>
-          <span class="tenant-name">{{ auth.tenant()?.name }}</span>
+          @if (brandStyle() !== 'text-only') {
+            @if (auth.tenant()?.branding?.logo) {
+              <img [src]="auth.tenant()!.branding.logo" alt="" class="tenant-logo" />
+            } @else {
+              <span class="tenant-icon">🏢</span>
+            }
+          }
+          @if (brandStyle() !== 'logo-only') {
+            <span class="tenant-name">{{ auth.tenant()?.name }}</span>
+          }
         </div>
       </div>
     </header>

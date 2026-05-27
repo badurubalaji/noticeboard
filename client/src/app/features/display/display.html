@@ -1,12 +1,17 @@
 @if (loading()) {
   <div class="display-status display-loading" [ngStyle]="brandStyles()">
     <div class="status-card">
-      @if (branding().displayScreens.showLogo && branding().logo) {
-        <img class="status-logo" [src]="branding().logo" alt="logo" />
-      } @else if (branding().displayScreens.showLogo) {
-        <div class="status-logo-fallback" [style.background]="branding().primaryColor">
-          {{ (branding().tenantName || 'N').charAt(0).toUpperCase() }}
-        </div>
+      @if (branding().displayScreens.showLogo && brandStyle() !== 'text-only') {
+        @if (branding().logo) {
+          <img class="status-logo" [src]="branding().logo" alt="" />
+        } @else {
+          <div class="status-logo-fallback" [style.background]="branding().primaryColor">
+            {{ (branding().tenantName || 'N').charAt(0).toUpperCase() }}
+          </div>
+        }
+      }
+      @if (brandStyle() !== 'logo-only' && branding().tenantName) {
+        <div class="status-tenant-name">{{ branding().tenantName }}</div>
       }
       <div class="status-spinner" [style.border-top-color]="branding().primaryColor"></div>
       <h2 class="status-title">{{ msgs().loadingTitle }}</h2>
@@ -16,12 +21,17 @@
 } @else if (error()) {
   <div class="display-status display-error" [ngStyle]="brandStyles()">
     <div class="status-card">
-      @if (branding().displayScreens.showLogo && branding().logo) {
-        <img class="status-logo" [src]="branding().logo" alt="logo" />
-      } @else if (branding().displayScreens.showLogo) {
-        <div class="status-logo-fallback" [style.background]="branding().primaryColor">
-          {{ (branding().tenantName || 'N').charAt(0).toUpperCase() }}
-        </div>
+      @if (branding().displayScreens.showLogo && brandStyle() !== 'text-only') {
+        @if (branding().logo) {
+          <img class="status-logo" [src]="branding().logo" alt="" />
+        } @else {
+          <div class="status-logo-fallback" [style.background]="branding().primaryColor">
+            {{ (branding().tenantName || 'N').charAt(0).toUpperCase() }}
+          </div>
+        }
+      }
+      @if (brandStyle() !== 'logo-only' && branding().tenantName) {
+        <div class="status-tenant-name">{{ branding().tenantName }}</div>
       }
       <div class="status-badge" [style.background]="branding().accentColor + '22'" [style.color]="branding().accentColor">
         Unavailable
@@ -33,23 +43,40 @@
 } @else {
   <div
     class="display-board"
-    [style.background-color]="board()?.theme?.bgColor || '#0F172A'"
+    [ngStyle]="boardBgStyles()"
     [style.font-family]="board()?.theme?.fontFamily || 'Inter, sans-serif'"
     (mouseenter)="onMouseEnter()"
     (mouseleave)="onMouseLeave()"
   >
+    <!-- Background video layer (sits behind everything) -->
+    @if (board()?.theme?.bgType === 'video' && board()?.theme?.bgVideo) {
+      <video class="display-bg-video"
+             [src]="board()?.theme?.bgVideo"
+             autoplay muted loop playsinline
+             [style.object-fit]="board()?.theme?.bgFit || 'cover'"></video>
+    }
+    <!-- Optional darkening overlay for readability -->
+    @if ((board()?.theme?.bgOverlay || 0) > 0) {
+      <div class="display-bg-overlay"
+           [style.background-color]="board()?.theme?.bgOverlayColor || '#000000'"
+           [style.opacity]="(board()?.theme?.bgOverlay || 0) / 100"></div>
+    }
+    <!-- Content sits on top of everything -->
+    <div class="display-board-content">
     <!-- Header Bar -->
     @if (board()?.theme?.headerVisible) {
       <div class="display-header">
         <div class="header-left">
-          @if (board()?.theme?.logoVisible) {
+          @if (board()?.theme?.logoVisible && brandStyle() !== 'text-only') {
             @if (branding().logo) {
               <img class="header-logo" [src]="branding().logo" alt="logo" />
             } @else {
-              <img class="header-logo" src="/logo.png" alt="NoticeBoard" />
+              <img class="header-logo" src="/logo.png" alt="" />
             }
           }
-          <span class="header-title">{{ board()?.theme?.headerText || board()?.name || 'NoticeBoard' }}</span>
+          @if (brandStyle() !== 'logo-only') {
+            <span class="header-title">{{ board()?.theme?.headerText || branding().tenantName || board()?.name || 'NoticeBoard' }}</span>
+          }
         </div>
         <div class="header-right">
           @if (board()?.theme?.dateVisible) {
@@ -406,5 +433,6 @@
 
     <!-- Fullscreen hint -->
     <div class="fullscreen-hint">Double-click for fullscreen</div>
+    </div><!-- /.display-board-content -->
   </div>
 }

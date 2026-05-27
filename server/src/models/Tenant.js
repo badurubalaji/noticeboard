@@ -28,6 +28,13 @@ const tenantSchema = new mongoose.Schema({
     fontFamily: { type: String, default: 'Inter' },
     darkMode: { type: Boolean, default: false },
     customCSS: { type: String, default: '' },
+    /**
+     * How the company brand is shown across the app and on kiosks:
+     *   'logo+text'  → logo image followed by the company name
+     *   'text-only'  → just the company name (no logo)
+     *   'logo-only'  → just the logo / image (no text)
+     */
+    brandStyle: { type: String, enum: ['logo+text', 'text-only', 'logo-only'], default: 'logo+text' },
     displayScreens: {
       showLogo: { type: Boolean, default: true },
       loadingTitle: { type: String, default: 'Loading board…' },

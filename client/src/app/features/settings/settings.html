@@ -18,7 +18,61 @@
   <!-- ===== Branding Tab ===== -->
   @if (activeTab === 'branding') {
     <div class="card settings-card">
-      <h3 class="section-title">Logo</h3>
+      <h3 class="section-title">Company name</h3>
+      <p class="hint">Shown in the sidebar, the top header, on TVs, and on the loading screen.</p>
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" class="form-input" [(ngModel)]="companyName" placeholder="e.g. Acme Industries" maxlength="80" />
+      </div>
+
+      <h3 class="section-title" style="margin-top:24px;">How should we show your brand?</h3>
+      <p class="hint">Pick what staff see when the app shows your company identity.</p>
+      <div class="brand-style-switch">
+        <button type="button" class="brand-style-btn"
+                [class.active]="(branding.brandStyle || 'logo+text') === 'logo+text'"
+                (click)="setBrandStyle('logo+text')">
+          <div class="brand-style-preview">
+            @if (branding.logo) {
+              <img [src]="branding.logo" alt="" class="bs-logo" />
+            } @else {
+              <div class="bs-logo-fallback" [style.background]="branding.primaryColor">
+                {{ previewLogoLetter() }}
+              </div>
+            }
+            <span class="bs-text">{{ companyName || 'Your Company' }}</span>
+          </div>
+          <strong>Logo + name</strong>
+          <span>The default — recognisable and friendly.</span>
+        </button>
+
+        <button type="button" class="brand-style-btn"
+                [class.active]="branding.brandStyle === 'text-only'"
+                (click)="setBrandStyle('text-only')">
+          <div class="brand-style-preview">
+            <span class="bs-text" [style.color]="branding.primaryColor"><strong>{{ companyName || 'Your Company' }}</strong></span>
+          </div>
+          <strong>Just the name</strong>
+          <span>Clean look — best when you don't have a logo yet.</span>
+        </button>
+
+        <button type="button" class="brand-style-btn"
+                [class.active]="branding.brandStyle === 'logo-only'"
+                (click)="setBrandStyle('logo-only')">
+          <div class="brand-style-preview">
+            @if (branding.logo) {
+              <img [src]="branding.logo" alt="" class="bs-logo bs-logo-big" />
+            } @else {
+              <div class="bs-logo-fallback bs-logo-big" [style.background]="branding.primaryColor">
+                {{ previewLogoLetter() }}
+              </div>
+            }
+          </div>
+          <strong>Just the logo</strong>
+          <span>Pure brand mark — works if your logo already has wording in it.</span>
+        </button>
+      </div>
+
+      <h3 class="section-title" style="margin-top:24px;">Logo</h3>
       <p class="hint">Upload your company logo (PNG or SVG works best). Shown on the kiosk screens.</p>
       <div class="logo-row">
         <div class="logo-preview" [style.background]="branding.primaryColor + '22'">

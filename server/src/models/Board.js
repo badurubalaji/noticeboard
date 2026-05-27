@@ -46,16 +46,23 @@ const boardSchema = new mongoose.Schema({
     statuses: [{ type: String }],
   },
   theme: {
-    bgColor: { type: String, default: '#0F172A' },
-    bgImage: { type: String, default: '' },
-    bgGradient: { type: String, default: '' },
+    // Background
+    bgType:         { type: String, enum: ['color', 'image', 'video', 'gradient'], default: 'color' },
+    bgColor:        { type: String, default: '#0F172A' },
+    bgImage:        { type: String, default: '' },           // PNG/JPG/WebP/GIF URL
+    bgVideo:        { type: String, default: '' },           // MP4/WebM URL — autoplays muted, looped
+    bgGradient:     { type: String, default: '' },           // any valid CSS gradient value
+    bgFit:          { type: String, enum: ['cover', 'contain', 'fill'], default: 'cover' },
+    bgOverlay:      { type: Number, default: 0, min: 0, max: 100 }, // % opacity of the overlay layer
+    bgOverlayColor: { type: String, default: '#000000' },
+    // Header / chrome
     headerVisible: { type: Boolean, default: true },
-    headerText: { type: String, default: '' },
-    clockVisible: { type: Boolean, default: true },
-    dateVisible: { type: Boolean, default: true },
-    logoVisible: { type: Boolean, default: true },
-    fontFamily: { type: String, default: '' },
-    fontSize: { type: String, default: 'medium' },
+    headerText:    { type: String,  default: '' },
+    clockVisible:  { type: Boolean, default: true },
+    dateVisible:   { type: Boolean, default: true },
+    logoVisible:   { type: Boolean, default: true },
+    fontFamily:    { type: String,  default: '' },
+    fontSize:      { type: String,  default: 'medium' },
   },
   externalDataSources: [{
     name: { type: String, required: true },

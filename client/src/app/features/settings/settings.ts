@@ -64,9 +64,13 @@ export class SettingsComponent implements OnInit {
     fontFamily: 'Inter',
     darkMode: false,
     customCSS: '',
+    brandStyle: 'logo+text',
     displayScreens: { ...DEFAULT_DISPLAY_SCREENS },
     customFonts: [],
   };
+
+  // Company name (lives on tenant.name, not on tenant.branding)
+  companyName = '';
 
   newFont: CustomFont = { family: '', url: '' };
 
@@ -83,9 +87,11 @@ export class SettingsComponent implements OnInit {
   ngOnInit(): void {
     const tenant = this.auth.tenant();
     if (tenant) {
+      this.companyName = tenant.name || '';
       this.branding = {
         ...this.branding,
         ...tenant.branding,
+        brandStyle: (tenant.branding as any).brandStyle || 'logo+text',
         displayScreens: {
           ...DEFAULT_DISPLAY_SCREENS,
           ...(tenant.branding.displayScreens || ({} as any)),
@@ -101,10 +107,17 @@ export class SettingsComponent implements OnInit {
   // ===== Branding save =====
   saveBranding(): void {
     this.saving.set(true);
-    this.api.updateTenant({ branding: this.branding as any }).subscribe({
+    const payload: any = { branding: this.branding };
+    const cleanName = (this.companyName || '').trim();
+    if (cleanName) payload.name = cleanName;
+    this.api.updateTenant(payload).subscribe({
       next: (t) => { this.auth.updateTenant(t); this.saving.set(false); },
       error: () => this.saving.set(false),
     });
+  }
+
+  setBrandStyle(s: 'logo+text' | 'text-only' | 'logo-only'): void {
+    this.branding.brandStyle = s;
   }
 
   // ===== Logo upload =====

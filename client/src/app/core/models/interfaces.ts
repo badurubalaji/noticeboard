@@ -21,6 +21,7 @@ export interface DisplayBranding {
   fontFamily: string;
   darkMode: boolean;
   tenantName?: string;
+  brandStyle?: 'logo+text' | 'text-only' | 'logo-only';
   customFonts?: CustomFont[];
   displayScreens: DisplayScreens;
 }
@@ -38,6 +39,7 @@ export interface Tenant {
     fontFamily: string;
     darkMode: boolean;
     customCSS: string;
+    brandStyle?: 'logo+text' | 'text-only' | 'logo-only';
     displayScreens?: DisplayScreens;
   };
   subscription: {
@@ -295,9 +297,14 @@ export interface Board {
     statuses: string[];
   };
   theme: {
+    bgType?: 'color' | 'image' | 'video' | 'gradient';
     bgColor: string;
     bgImage: string;
+    bgVideo?: string;
     bgGradient: string;
+    bgFit?: 'cover' | 'contain' | 'fill';
+    bgOverlay?: number;
+    bgOverlayColor?: string;
     headerVisible: boolean;
     headerText: string;
     clockVisible: boolean;

@@ -255,6 +255,7 @@ exports.getBoardNotices = async (req, res, next) => {
       accentColor: b?.accentColor || '#F59E0B',
       fontFamily: b?.fontFamily || 'Inter',
       darkMode: b?.darkMode ?? false,
+      brandStyle: b?.brandStyle || 'logo+text',
       customFonts: Array.isArray(b?.customFonts) ? b.customFonts.map(f => ({ family: f.family, url: f.url })) : [],
       displayScreens: {
         showLogo: b?.displayScreens?.showLogo ?? true,
