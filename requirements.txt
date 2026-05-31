@@ -1,0 +1,32 @@
+We need notice board application, which will be used to display notices on the notice board.    like in tablet or tv though PWA application.
+
+Features:
+1. Add Notice   
+2. Edit Notice
+3. Delete Notice
+4. List Notices
+5. Display Notices on notice board
+6. Allow to configure notices how to display in grids, rows, coloumns, large, medium, small, etc.
+7. Create notice from templates.
+8. Allow to upload images and videos.
+9. Allow to schedule notices.
+10. Allow to set priority of notices.
+11. Allow to set category of notices.
+12. Allow to share notices with other users.
+13. Allow to set permissions for notices.
+14. corrosouel display of notices (sliding show).
+15. Auto scroll mode
+16. Allow to data from api and allow to what needs to be displayed on noticeboard.
+
+it shoulud support IT companies, Logistics companies, Manufacturing companies, Assembly companies, etc. in all categories. they can have 
+It should be easy setup for the companies to use it.
+Allow to customize the application for each company through UI only
+Allow users to add their own template
+Allow users to set theme, colors, fonts, etc.
+
+
+Tech stack:
+Angular
+Nodejs  
+expressjs
+Mangodb

@@ -32,7 +32,7 @@ const server = http.createServer(app);
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: process.env.SOCKET_CORS_ORIGIN || 'http://localhost:4200',
+    origin: process.env.SOCKET_CORS_ORIGIN || 'http://localhost:4200' || 'http://localhost:4300',
     methods: ['GET', 'POST'],
   },
 });
@@ -115,7 +115,7 @@ app.use(helmet({
   },
 }));
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:4200',
+  origin: process.env.CORS_ORIGIN || 'http://localhost:4200' || 'http://localhost:4300',
   credentials: true,
 }));
 app.use(morgan('dev'));
@@ -158,8 +158,30 @@ app.get('/api/health', (req, res) => {
 // so admins/users access everything on http://<lan-ip>:3000.
 const CLIENT_DIST = path.join(__dirname, '..', '..', 'client', 'dist', 'client', 'browser');
 if (fs.existsSync(CLIENT_DIST)) {
-  app.use(express.static(CLIENT_DIST, { index: false }));
+  // Serve hashed JS/CSS bundles with long-lived caching, but force
+  // index.html, manifest, and the service-worker assets to revalidate
+  // every load so admins never see stale CSS after a rebuild.
+  app.use(express.static(CLIENT_DIST, {
+    index: false,
+    setHeaders: (res, filePath) => {
+      const base = path.basename(filePath);
+      if (
+        base === 'index.html' ||
+        base === 'manifest.webmanifest' ||
+        base === 'ngsw.json' ||
+        base === 'ngsw-worker.js' ||
+        base === 'safety-worker.js'
+      ) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      } else if (/\.[0-9a-f]{8,}\.(?:js|css|woff2?|png|jpg|webp|svg|ico)$/i.test(base)) {
+        // Angular adds an 8+ hex hash to every fingerprinted asset; safe
+        // to cache forever because a new build → new hash → new URL.
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  }));
   app.get(/^(?!\/api\/|\/uploads\/).*/, (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile(path.join(CLIENT_DIST, 'index.html'));
   });
   console.log(`📦 Serving client bundle from ${CLIENT_DIST}`);
